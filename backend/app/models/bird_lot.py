@@ -6,12 +6,17 @@ dominio (cálculos y evaluaciones) vive en `app/services/lot_service.py`.
 """
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Integer, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import CicloProductivo
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.egg_production import EggProduction
+    from app.models.feeding import FeedingRecord
 
 
 class BirdLot(Base):
@@ -30,6 +35,8 @@ class BirdLot(Base):
         is_active: Si el lote está activo (activo).
         discard_reason: Razón de descarte (razon_descarte).
         observations: Observaciones generales del lote.
+        egg_productions: Registros de producción de huevos del lote.
+        feeding_records: Registros de alimentación del lote.
     """
 
     __tablename__ = "bird_lots"
@@ -52,3 +59,10 @@ class BirdLot(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     discard_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     observations: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    egg_productions: Mapped[list["EggProduction"]] = relationship(
+        back_populates="lot"
+    )
+    feeding_records: Mapped[list["FeedingRecord"]] = relationship(
+        back_populates="lot"
+    )
