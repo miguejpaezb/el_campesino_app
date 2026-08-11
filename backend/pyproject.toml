@@ -1,0 +1,14 @@
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "RUF"]
+ignore = [
+    # FastAPI usa Depends() en argumentos por defecto (patrón estándar).
+    "B008",
+]
+
+[tool.isort]
+profile = "black"
+line_length = 88
