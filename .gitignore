@@ -1,0 +1,69 @@
+# Sistema operativo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# Archivos de editor / IDE
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.iml
+
+# Dependencias y paquetes
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+*.jar
+*.war
+*.ear
+
+# Entornos virtuales y variables de entorno
+.env
+.env.local
+.env.*.local
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de compilación y distribución
+dist/
+build/
+out/
+target/
+*.class
+*.o
+*.so
+*.exe
+*.dll
+*.log
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*~
+
+# Cobertura y reportes
+docs/
+coverage/
+*.lcov
+
+# Bases de datos y datos generados
+*.sqlite
+*.db
+*.sql
+
+# Archivos comprimidos
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.gz
