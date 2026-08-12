@@ -24,3 +24,35 @@ class CicloProductivo:
     SEMANA_DE_EVALUACION = 90
     EXTENSION_SEMANAS = 30
     PORCENTAJE_MINIMO_POSTURA = 80
+
+
+class SensorThresholds:
+    """Rangos seguros de las variables ambientales para las aves.
+
+    Attributes:
+        TEMPERATURE_MIN: Temperatura mínima segura en grados Celsius.
+        TEMPERATURE_MAX: Temperatura máxima segura en grados Celsius.
+        HUMIDITY_MIN: Humedad relativa mínima segura en porcentaje.
+        HUMIDITY_MAX: Humedad relativa máxima segura en porcentaje.
+        AMMONIA_MAX: Concentración máxima segura de amoníaco en ppm.
+    """
+
+    TEMPERATURE_MIN = 18.0
+    TEMPERATURE_MAX = 30.0
+    HUMIDITY_MIN = 40.0
+    HUMIDITY_MAX = 70.0
+    AMMONIA_MAX = 25.0
+
+
+class SensorUnits:
+    """Unidades de medida por tipo de sensor.
+
+    Attributes:
+        TEMPERATURE: Unidad de temperatura (°C).
+        HUMIDITY: Unidad de humedad (%).
+        AMMONIA: Unidad de amoníaco (ppm).
+    """
+
+    TEMPERATURE = "°C"
+    HUMIDITY = "%"
+    AMMONIA = "ppm"

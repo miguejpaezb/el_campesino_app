@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.models.user import User
 from app.schemas.egg_production import EggProductionCreate, EggProductionOut
 from app.services.production_service import ProductionService
 
@@ -56,7 +57,7 @@ def register_production(
     lot_id: int,
     payload: EggProductionCreate,
     db: Session = Depends(get_db),
-    _: object = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> EggProductionOut:
     """Registra la producción diaria de huevos de un lote.
 
@@ -64,6 +65,7 @@ def register_production(
         lot_id: Identificador del lote.
         payload: Datos del registro de producción.
         db: Sesión de base de datos inyectada por FastAPI.
+        current_user: Usuario autenticado.
 
     Returns:
         El registro de producción creado.
@@ -73,7 +75,7 @@ def register_production(
         HTTPException 400: Si el lote está inactivo o no está en postura.
     """
     service = ProductionService(db)
-    production = service.register_eggs(lot_id, payload)
+    production = service.register_eggs(lot_id, payload, current_user.id)
     return EggProductionOut.model_validate(production)
 
 

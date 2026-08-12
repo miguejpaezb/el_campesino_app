@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.models.user import User
 from app.schemas.feeding import FeedingCreate, FeedingOut
 from app.services.feeding_service import FeedingService
 
@@ -48,7 +49,7 @@ def register_feeding(
     lot_id: int,
     payload: FeedingCreate,
     db: Session = Depends(get_db),
-    _: object = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> FeedingOut:
     """Registra el suministro de alimento de un lote.
 
@@ -56,6 +57,7 @@ def register_feeding(
         lot_id: Identificador del lote.
         payload: Datos del registro de alimentación.
         db: Sesión de base de datos inyectada por FastAPI.
+        current_user: Usuario autenticado.
 
     Returns:
         El registro de alimentación creado.
@@ -65,7 +67,7 @@ def register_feeding(
         HTTPException 400: Si el lote está inactivo.
     """
     service = FeedingService(db)
-    record = service.register_feeding(lot_id, payload)
+    record = service.register_feeding(lot_id, payload, current_user.id)
     return FeedingOut.model_validate(record)
 
 

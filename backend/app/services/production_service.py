@@ -15,6 +15,7 @@ from app.models.egg_production import EggProduction
 from app.repositories.production_repository import ProductionRepository
 from app.schemas.egg_production import EggProductionCreate
 from app.services.lot_service import LotService
+from app.services.traceability_service import TraceabilityService
 
 
 class ProductionService:
@@ -26,11 +27,12 @@ class ProductionService:
     """
 
     def __init__(self, db: Session):
+        self.db = db
         self.repository = ProductionRepository(db)
         self.lot_service = LotService(db)
 
     def register_eggs(
-        self, lot_id: int, data: EggProductionCreate
+        self, lot_id: int, data: EggProductionCreate, user_id: int
     ) -> EggProduction:
         """Registra la producción diaria de huevos de un lote.
 
@@ -41,6 +43,7 @@ class ProductionService:
         Args:
             lot_id: Identificador del lote.
             data: Datos validados del registro.
+            user_id: Usuario que ejecuta la acción.
 
         Returns:
             El registro de producción creado.
@@ -76,7 +79,19 @@ class ProductionService:
             broken_eggs=data.broken_eggs,
             observations=data.observations,
         )
-        return self.repository.create(production)
+        production = self.repository.create(production)
+        TraceabilityService(self.db).log_event(
+            "EggProduction",
+            production.id,
+            "CREATE",
+            user_id,
+            changes={
+                "lot_id": production.lot_id,
+                "week": production.week,
+                "egg_count": production.egg_count,
+            },
+        )
+        return production
 
     def get_production_by_lot(
         self,

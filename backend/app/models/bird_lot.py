@@ -15,8 +15,11 @@ from app.core.constants import CicloProductivo
 from app.core.database import Base
 
 if TYPE_CHECKING:
+    from app.models.disease import Disease
     from app.models.egg_production import EggProduction
     from app.models.feeding import FeedingRecord
+    from app.models.mortality import Mortality
+    from app.models.vaccination import Vaccination
 
 
 class BirdLot(Base):
@@ -37,6 +40,9 @@ class BirdLot(Base):
         observations: Observaciones generales del lote.
         egg_productions: Registros de producción de huevos del lote.
         feeding_records: Registros de alimentación del lote.
+        vaccinations: Registros de vacunación del lote.
+        mortalities: Registros de mortalidad del lote.
+        diseases: Registros de enfermedades del lote.
     """
 
     __tablename__ = "bird_lots"
@@ -64,5 +70,14 @@ class BirdLot(Base):
         back_populates="lot"
     )
     feeding_records: Mapped[list["FeedingRecord"]] = relationship(
+        back_populates="lot"
+    )
+    vaccinations: Mapped[list["Vaccination"]] = relationship(
+        back_populates="lot"
+    )
+    mortalities: Mapped[list["Mortality"]] = relationship(
+        back_populates="lot"
+    )
+    diseases: Mapped[list["Disease"]] = relationship(
         back_populates="lot"
     )

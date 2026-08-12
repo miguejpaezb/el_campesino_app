@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.models.user import User
 from app.schemas.bird_lot import (
     BirdLotCreate,
     BirdLotDiscard,
@@ -55,13 +56,14 @@ def list_lots(
 def create_lot(
     payload: BirdLotCreate,
     db: Session = Depends(get_db),
-    _: object = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> BirdLotOut:
     """Crea un nuevo lote con la cantidad inicial de aves.
 
     Args:
         payload: Datos del lote a crear.
         db: Sesión de base de datos inyectada por FastAPI.
+        current_user: Usuario autenticado.
 
     Returns:
         El lote recién creado.
@@ -70,7 +72,7 @@ def create_lot(
         HTTPException 409: Si el código de lote ya existe.
     """
     service = LotService(db)
-    lot = service.create_lot(payload)
+    lot = service.create_lot(payload, current_user.id)
     return BirdLotOut.model_validate(lot)
 
 
@@ -109,7 +111,7 @@ def update_lot(
     lot_id: int,
     payload: BirdLotUpdate,
     db: Session = Depends(get_db),
-    _: object = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> BirdLotOut:
     """Actualiza los campos enviados de un lote.
 
@@ -117,12 +119,14 @@ def update_lot(
         lot_id: Identificador del lote.
         payload: Campos a actualizar.
         db: Sesión de base de datos inyectada por FastAPI.
+        current_user: Usuario autenticado.
 
     Returns:
         El lote actualizado.
     """
     service = LotService(db)
-    return BirdLotOut.model_validate(service.update_lot(lot_id, payload))
+    lot = service.update_lot(lot_id, payload, current_user.id)
+    return BirdLotOut.model_validate(lot)
 
 
 @router.delete(
@@ -135,7 +139,7 @@ def discard_lot(
     lot_id: int,
     payload: BirdLotDiscard,
     db: Session = Depends(get_db),
-    _: object = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> BirdLotOut:
     """Desactiva un lote con la razón de descarte indicada.
 
@@ -143,12 +147,14 @@ def discard_lot(
         lot_id: Identificador del lote.
         payload: Razón del descarte.
         db: Sesión de base de datos inyectada por FastAPI.
+        current_user: Usuario autenticado.
 
     Returns:
         El lote desactivado.
     """
     service = LotService(db)
-    return BirdLotOut.model_validate(service.discard_lot(lot_id, payload))
+    lot = service.discard_lot(lot_id, payload, current_user.id)
+    return BirdLotOut.model_validate(lot)
 
 
 @router.post(
@@ -159,19 +165,21 @@ def discard_lot(
 def advance_week(
     lot_id: int,
     db: Session = Depends(get_db),
-    _: object = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> BirdLotOut:
     """Incrementa la semana actual del ciclo productivo del lote.
 
     Args:
         lot_id: Identificador del lote.
         db: Sesión de base de datos inyectada por FastAPI.
+        current_user: Usuario autenticado.
 
     Returns:
         El lote con la semana incrementada.
     """
     service = LotService(db)
-    return BirdLotOut.model_validate(service.advance_week(lot_id))
+    lot = service.advance_week(lot_id, current_user.id)
+    return BirdLotOut.model_validate(lot)
 
 
 @router.post(
@@ -182,19 +190,20 @@ def advance_week(
 def evaluate_lot(
     lot_id: int,
     db: Session = Depends(get_db),
-    _: object = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> dict[str, bool | str]:
     """Evalúa el lote y aplica la regla del ciclo productivo.
 
     Args:
         lot_id: Identificador del lote.
         db: Sesión de base de datos inyectada por FastAPI.
+        current_user: Usuario autenticado.
 
     Returns:
         Mensaje con el resultado de la evaluación y el estado del lote.
     """
     service = LotService(db)
-    return service.evaluate_lot(lot_id)
+    return service.evaluate_lot(lot_id, current_user.id)
 
 
 @router.get(

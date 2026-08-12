@@ -14,6 +14,7 @@ from app.models.feeding import FeedingRecord
 from app.repositories.feeding_repository import FeedingRepository
 from app.schemas.feeding import FeedingCreate
 from app.services.lot_service import LotService
+from app.services.traceability_service import TraceabilityService
 
 
 class FeedingService:
@@ -25,10 +26,13 @@ class FeedingService:
     """
 
     def __init__(self, db: Session):
+        self.db = db
         self.repository = FeedingRepository(db)
         self.lot_service = LotService(db)
 
-    def register_feeding(self, lot_id: int, data: FeedingCreate) -> FeedingRecord:
+    def register_feeding(
+        self, lot_id: int, data: FeedingCreate, user_id: int
+    ) -> FeedingRecord:
         """Registra el suministro de alimento de un lote.
 
         Aplica la regla de negocio del ejercicio en clase: el lote debe
@@ -37,6 +41,7 @@ class FeedingService:
         Args:
             lot_id: Identificador del lote.
             data: Datos validados del registro.
+            user_id: Usuario que ejecuta la acción.
 
         Returns:
             El registro de alimentación creado.
@@ -62,7 +67,20 @@ class FeedingService:
             cost_per_kilo=data.cost_per_kilo,
             observations=data.observations,
         )
-        return self.repository.create(record)
+        record = self.repository.create(record)
+        TraceabilityService(self.db).log_event(
+            "FeedingRecord",
+            record.id,
+            "CREATE",
+            user_id,
+            changes={
+                "lot_id": record.lot_id,
+                "week": record.week,
+                "feed_type": record.feed_type,
+                "kilos": record.kilos,
+            },
+        )
+        return record
 
     def get_feeding_by_lot(self, lot_id: int) -> list[FeedingRecord]:
         """Lista los registros de alimentación de un lote.
