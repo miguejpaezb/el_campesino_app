@@ -9,10 +9,11 @@
  * @returns {JSX.Element} Formulario de login.
  */
 import { useState } from 'react'
-import { Alert, Button, Card, Container, Form } from 'react-bootstrap'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Alert, Button, Form } from 'react-bootstrap'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import { getErrorMessage } from '../utils/errors.js'
+import './LoginPage.css'
 
 function LoginPage({ onLoginSuccess }) {
   const { user, login } = useAuth()
@@ -42,45 +43,70 @@ function LoginPage({ onLoginSuccess }) {
   }
 
   return (
-    <Container className="d-flex justify-content-center align-items-center vh-100">
-      <Card style={{ width: '100%', maxWidth: 400 }}>
-        <Card.Body>
-          <Card.Title className="text-center mb-3">
-            El Campesino - Iniciar sesión
-          </Card.Title>
-          {error && <Alert variant="danger">{error}</Alert>}
+    <div className="login-page">
+      <div className="column form">
+        <div className="logo">
+          <img src="/pluma.svg" alt="Logo El Campesino" />
+          <h1>El Campesino</h1>
+        </div>
+        <div className="login-form">
+          <h2>Iniciar Sesión</h2>
+          {error && (
+            <Alert variant="danger" className="mb-0">
+              {error}
+            </Alert>
+          )}
           <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3" controlId="login-username">
-              <Form.Label>Usuario</Form.Label>
-              <Form.Control
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoFocus
-              />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="login-password">
-              <Form.Label>Contraseña</Form.Label>
-              <Form.Control
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </Form.Group>
+            <Form.Control
+              type="text"
+              className="login-control mb-2"
+              placeholder="Nombre de Usuario"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoFocus
+            />
+            <Form.Control
+              type="password"
+              className="login-control mb-2"
+              placeholder="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
             <Button
               type="submit"
-              variant="primary"
-              className="w-100"
+              className="login-button"
               disabled={submitting}
             >
               {submitting ? 'Ingresando...' : 'Ingresar'}
             </Button>
           </Form>
-        </Card.Body>
-      </Card>
-    </Container>
+          <a href="#" className="forgot-link">
+            Olvidé mi contraseña
+          </a>
+        </div>
+        <p>
+          ¿No tiene una cuenta? <Link to="/register">Crear cuenta</Link>
+        </p>
+      </div>
+
+      <div className="column info">
+        <div className="system-status">
+          <div className="status"></div>
+          <span>Estado del sistema: Óptimo</span>
+        </div>
+        <div className="info-system">
+          <h2>Una avicultura más inteligente comienza aquí.</h2>
+          <p>
+            Supervise el bienestar de sus aves, automatice el control climático
+            y realice un seguimiento de la producción de huevos con un panel de
+            control de alta precisión diseñado para productores con visión de
+            futuro.
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
 

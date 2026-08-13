@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+.register-page {
+  height: 100vh;
+  display: grid;
+  grid-template: 'info form' auto / auto 45%;
+  font-family: 'Roboto', sans-serif;
+}
+
+.register-page .column.form {
+  grid-area: form;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 30px;
+  padding: 30px;
+}
+
+.register-page .form .logo {
+  width: 70%;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  gap: 10px;
+}
+
+.register-page .form .logo img {
+  width: 70px;
+}
+
+.register-page .form .logo h1 {
+  font-size: 2.7rem;
+  margin: 0;
+}
+
+.register-page .form .register-form {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.register-page .register-control {
+  width: 100%;
+  padding: 10px 15px;
+  font-size: 1rem;
+  border: 1px solid #777777;
+  border-radius: 10px;
+}
+
+.register-page .register-control:focus {
+  border-color: #3e692c;
+  box-shadow: none;
+  outline: none;
+}
+
+.register-page .register-control.is-valid,
+.register-page .register-control.is-invalid {
+  box-shadow: none;
+  padding-right: 12px;
+}
+
+.register-page .passwords {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.register-page .passwords .field {
+  flex: 1;
+}
+
+.register-page .register-button {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 1px solid #f6cb46;
+  background: #f6cb46;
+  color: #000;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.register-page .register-button:hover {
+  background: #e6b93a;
+  border-color: #e6b93a;
+}
+
+.register-page .register-button:disabled {
+  background: #f6cb46;
+  border-color: #f6cb46;
+  opacity: 0.65;
+}
+
+.register-page .terms-policy {
+  padding-left: 4px;
+  padding-bottom: 6px;
+  font-size: 0.9rem;
+  color: black;
+  display: flex;
+  align-items: start;
+  gap: 6px;
+}
+
+.register-page .terms-policy label {
+  margin: 0;
+}
+
+.register-page .terms-policy label a {
+  color: #3e692c;
+  text-decoration: none;
+}
+
+.register-page .form p {
+  width: 70%;
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.register-page .form p a {
+  color: #3e692c;
+  text-decoration: none;
+}
+
+.register-page .column.info {
+  grid-area: info;
+  background: #3e692c;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.register-page .info .system-status {
+  width: fit-content;
+  background: #e9e9e9;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 20px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.register-page .info .system-status .status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #000;
+}
+
+.register-page .info .info-system {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #e9e9e9;
+}
+
+.register-page .info .info-system h2 {
+  font-weight: 600;
+  font-size: 2.4rem;
+}
+
+.register-page .info .info-system p {
+  font-weight: 200;
+}
+
+@media (max-width: 768px) {
+  .register-page {
+    grid-template: 'form' auto / 100%;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .register-page .column.info {
+    display: none;
+  }
+
+  .register-page .passwords {
+    flex-direction: column;
+  }
+}
