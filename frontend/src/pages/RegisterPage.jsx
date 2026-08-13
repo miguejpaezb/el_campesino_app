@@ -15,6 +15,8 @@ import { getErrorMessage } from '../utils/errors.js'
 import './RegisterPage.css'
 
 const MIN_PASSWORD_LENGTH = 8
+const MIN_USERNAME_LENGTH = 3
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function RegisterPage() {
   const { user } = useAuth()
@@ -30,11 +32,22 @@ function RegisterPage() {
   const [submitting, setSubmitting] = useState(false)
   const redirectTimeout = useRef(null)
 
+  const fullNameValid = fullName.trim().length > 0
+  const usernameValid =
+    username.length >= MIN_USERNAME_LENGTH && username.length <= 50
+  const emailValid = EMAIL_REGEX.test(email)
   const passwordTooShort =
     password.length > 0 && password.length < MIN_PASSWORD_LENGTH
   const confirmTouched = confirmPassword.length > 0
   const passwordsMatch = confirmTouched && password === confirmPassword
-  const canSubmit = !passwordTooShort && passwordsMatch && terms && !submitting
+  const canSubmit =
+    fullNameValid &&
+    usernameValid &&
+    emailValid &&
+    !passwordTooShort &&
+    passwordsMatch &&
+    terms &&
+    !submitting
 
   useEffect(() => {
     return () => {
@@ -102,7 +115,12 @@ function RegisterPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
+              isInvalid={fullName.length > 0 && !fullNameValid}
+              isValid={fullName.length > 0 && fullNameValid}
             />
+            <Form.Control.Feedback type="invalid" className="small">
+              El nombre completo es obligatorio.
+            </Form.Control.Feedback>
             <Form.Control
               type="text"
               className="register-control mb-2"
@@ -110,9 +128,15 @@ function RegisterPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              minLength={3}
+              minLength={MIN_USERNAME_LENGTH}
               maxLength={50}
+              isInvalid={username.length > 0 && !usernameValid}
+              isValid={username.length > 0 && usernameValid}
             />
+            <Form.Control.Feedback type="invalid" className="small">
+              El nombre de usuario debe tener al menos {MIN_USERNAME_LENGTH}{' '}
+              caracteres.
+            </Form.Control.Feedback>
             <Form.Control
               type="email"
               className="register-control mb-2"
@@ -120,7 +144,12 @@ function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              isInvalid={email.length > 0 && !emailValid}
+              isValid={email.length > 0 && emailValid}
             />
+            <Form.Control.Feedback type="invalid" className="small">
+              Ingresa un correo electrónico válido (ej: usuario@dominio.com).
+            </Form.Control.Feedback>
             <div className="passwords">
               <div className="field">
                 <Form.Control
