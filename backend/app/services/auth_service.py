@@ -23,11 +23,14 @@ class AuthService:
     def __init__(self, db: Session):
         self.repository = UserRepository(db)
 
-    def register(self, user_data: UserCreate) -> User:
+    def register(
+        self, user_data: UserCreate, role: str | None = None
+    ) -> User:
         """Registra un nuevo usuario en el sistema.
 
         Args:
             user_data: Datos validados del usuario a crear.
+            role: Rol opcional que sobreescribe el valor de `user_data.role`.
 
         Returns:
             El usuario creado.
@@ -47,7 +50,7 @@ class AuthService:
             )
 
         hashed = hash_password(user_data.password)
-        return self.repository.create(user_data, hashed)
+        return self.repository.create(user_data, hashed, role=role)
 
     def authenticate(self, credentials: UserLogin) -> TokenResponse:
         """Autentica a un usuario y devuelve un token JWT.
@@ -85,3 +88,13 @@ class AuthService:
             Los datos públicos del usuario.
         """
         return UserOut.model_validate(current_user)
+
+    def list_users(self) -> list[UserOut]:
+        """Lista todos los usuarios del sistema.
+
+        Returns:
+            Lista con los datos públicos de todos los usuarios.
+        """
+        return [
+            UserOut.model_validate(user) for user in self.repository.get_all()
+        ]

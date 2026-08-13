@@ -111,17 +111,14 @@ npm run lint
 
 Con el backend y el frontend corriendo, la conexión entre ambos se valida con una versión lite de login y dashboard:
 
-1. **Registrar un usuario** (una sola vez) vía la API:
-   `POST http://localhost:5173/api/v1/auth/register` (pasa por el proxy hacia el backend).
+1. **Crear el usuario admin inicial** con el script CLI:
 
-   ```json
-   {
-     "username": "juan",
-     "email": "juan@example.com",
-     "password": "MiClave123",
-     "full_name": "Juan Perez"
-   }
+   ```powershell
+   .venv\Scripts\python.exe -m app.scripts.create_admin --username admin --email admin@example.com --password MiClave123
    ```
+
+   El registro público de usuarios fue eliminado: las cuentas solo las crea un
+   usuario con rol `admin` (vía API o desde el frontend).
 
 2. **Iniciar sesión** en <http://localhost:5173/login>: la `LoginPage` llama a `POST /api/v1/auth/login`, guarda el `access_token` en `localStorage` y obtiene el usuario con `GET /api/v1/auth/me`.
 
@@ -228,13 +225,14 @@ frontend/
 
 ## API disponible (endpoints)
 
-Todas las rutas usan el prefijo `/api/v1`. Todos los endpoints, excepto `register` y `login`, requieren un token JWT (`Authorization: Bearer <token>`).
+Todas las rutas usan el prefijo `/api/v1`. Todos los endpoints, excepto `login`, requieren un token JWT (`Authorization: Bearer <token>`). `register` y `users` requieren además el rol `admin`.
 
 ### Autenticación
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| `POST` | `/api/v1/auth/register` | Crear un usuario |
+| `POST` | `/api/v1/auth/register` | Crear un usuario (**solo admin**) |
+| `GET` | `/api/v1/auth/users` | Listar usuarios (**solo admin**) |
 | `POST` | `/api/v1/auth/login` | Iniciar sesión y obtener JWT |
 | `GET` | `/api/v1/auth/me` | Datos del usuario autenticado |
 
@@ -303,15 +301,10 @@ Todas las rutas usan el prefijo `/api/v1`. Todos los endpoints, excepto `registe
 
 ## Ejemplo de uso rápido (Postman)
 
-1. **Registrar usuario** → `POST /api/v1/auth/register`:
+1. **Crear el admin inicial** (o pedirlo a un admin existente):
 
-```json
-{
-  "username": "juan",
-  "email": "juan@example.com",
-  "password": "MiClave123",
-  "full_name": "Juan Perez"
-}
+```powershell
+.venv\Scripts\python.exe -m app.scripts.create_admin --username admin --email admin@example.com --password MiClave123
 ```
 
 2. **Iniciar sesión** → `POST /api/v1/auth/login` (guarda el `access_token`):

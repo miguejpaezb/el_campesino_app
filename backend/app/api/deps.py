@@ -5,6 +5,6 @@ routers las importen de forma limpia y consistente.
 """
 
 from app.core.database import get_db
-from app.core.security import get_current_user, oauth2_scheme
+from app.core.security import get_current_admin, get_current_user, oauth2_scheme
 
-__all__ = ["get_current_user", "get_db", "oauth2_scheme"]
+__all__ = ["get_current_admin", "get_current_user", "get_db", "oauth2_scheme"]

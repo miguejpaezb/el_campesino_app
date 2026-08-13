@@ -38,12 +38,23 @@ class UserRepository:
         """
         return self.db.query(User).filter(User.email == email).first()
 
-    def create(self, user_data: UserCreate, hashed_password: str) -> User:
+    def get_all(self) -> list[User]:
+        """Devuelve todos los usuarios registrados.
+
+        Returns:
+            Lista con todos los usuarios del sistema.
+        """
+        return self.db.query(User).all()
+
+    def create(
+        self, user_data: UserCreate, hashed_password: str, role: str | None = None
+    ) -> User:
         """Crea y persiste un nuevo usuario.
 
         Args:
             user_data: Datos validados del nuevo usuario.
             hashed_password: Hash bcrypt de la contraseña.
+            role: Rol del usuario. Si es None, usa el rol de `user_data`.
 
         Returns:
             El usuario recién creado.
@@ -53,6 +64,7 @@ class UserRepository:
             email=user_data.email,
             full_name=user_data.full_name,
             hashed_password=hashed_password,
+            role=role or user_data.role,
         )
         self.db.add(user)
         self.db.commit()

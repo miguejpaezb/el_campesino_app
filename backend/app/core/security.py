@@ -124,3 +124,23 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Dependencia que exige que el usuario autenticado tenga rol admin.
+
+    Args:
+        current_user: Usuario autenticado inyectado por `get_current_user`.
+
+    Returns:
+        El usuario autenticado si tiene rol admin.
+
+    Raises:
+        HTTPException: Si el usuario autenticado no tiene rol admin.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere rol de administrador",
+        )
+    return current_user

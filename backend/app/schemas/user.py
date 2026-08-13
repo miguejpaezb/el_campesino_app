@@ -4,7 +4,11 @@ Define los DTOs de entrada y salida para el módulo de usuarios: creación,
 login, respuesta de token y datos públicos del usuario.
 """
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+UserRole = Literal["admin", "operario", "veterinario"]
 
 
 class UserCreate(BaseModel):
@@ -15,12 +19,14 @@ class UserCreate(BaseModel):
         email: Correo electrónico válido.
         password: Contraseña en texto plano (mínimo 8 caracteres).
         full_name: Nombre completo del usuario.
+        role: Rol asignado al usuario (admin, operario, veterinario).
     """
 
     username: str = Field(min_length=3, max_length=50)
     email: EmailStr
     password: str = Field(min_length=8)
     full_name: str = Field(min_length=1, max_length=100)
+    role: UserRole = "operario"
 
 
 class UserLogin(BaseModel):

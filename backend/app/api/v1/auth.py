@@ -6,7 +6,7 @@ Expone las rutas `/register`, `/login` y `/me` para el módulo de auth.
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_admin, get_current_user, get_db
 from app.models.user import User
 from app.schemas.user import TokenResponse, UserCreate, UserLogin, UserOut
 from app.services.auth_service import AuthService
@@ -18,10 +18,16 @@ router = APIRouter()
     "/register",
     response_model=UserOut,
     status_code=status.HTTP_201_CREATED,
-    summary="Registrar un nuevo usuario",
+    summary="Registrar un nuevo usuario (solo admin)",
 )
-def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserOut:
-    """Crea una cuenta de usuario en el sistema.
+def register(
+    payload: UserCreate,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_admin),
+) -> UserOut:
+    """Crea un usuario en el sistema.
+
+    Solo un usuario autenticado con rol admin puede crear cuentas.
 
     Args:
         payload: Datos del usuario a registrar.
@@ -31,11 +37,34 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserOut:
         Los datos públicos del usuario recién creado.
 
     Raises:
+        HTTPException 401: Si no hay sesión iniciada.
+        HTTPException 403: Si el usuario autenticado no es admin.
         HTTPException 409: Si el username o el correo ya existen.
     """
     service = AuthService(db)
     user = service.register(payload)
     return UserOut.model_validate(user)
+
+
+@router.get(
+    "/users",
+    response_model=list[UserOut],
+    summary="Listar usuarios (solo admin)",
+)
+def list_users(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_admin),
+) -> list[UserOut]:
+    """Devuelve todos los usuarios registrados.
+
+    Args:
+        db: Sesión de base de datos inyectada por FastAPI.
+
+    Returns:
+        Lista con los datos públicos de todos los usuarios.
+    """
+    service = AuthService(db)
+    return service.list_users()
 
 
 @router.post(

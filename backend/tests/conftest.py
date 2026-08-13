@@ -85,6 +85,27 @@ def test_user(db_session):
 
 
 @pytest.fixture
+def admin_user(db_session):
+    """Crea un usuario de prueba con rol admin.
+
+    Args:
+        db_session: Sesión de la base en memoria.
+
+    Returns:
+        El usuario admin creado.
+    """
+    service = AuthService(db_session)
+    user_data = UserCreate(
+        username="adminuser",
+        email="admin@example.com",
+        password="Adminpass123",
+        full_name="Usuario Admin",
+        role="admin",
+    )
+    return service.register(user_data)
+
+
+@pytest.fixture
 def auth_headers(client, test_user):
     """Headers de autorización para un usuario autenticado.
 
@@ -100,6 +121,27 @@ def auth_headers(client, test_user):
     response = client.post(
         "/api/v1/auth/login",
         json={"username": "testuser", "password": "Testpass123"},
+    )
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def admin_headers(client, admin_user):
+    """Headers de autorización para un usuario con rol admin.
+
+    Realiza login con el usuario admin y devuelve los headers Bearer.
+
+    Args:
+        client: Cliente de pruebas.
+        admin_user: Usuario admin de prueba registrado.
+
+    Returns:
+        Diccionario con el header Authorization.
+    """
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"username": "adminuser", "password": "Adminpass123"},
     )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
