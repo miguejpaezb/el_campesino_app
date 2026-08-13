@@ -8,16 +8,17 @@ Sistema de gestión modular para la granja avícola **"El Campesino"**. Administ
 
 ## Estado del proyecto
 
-| Módulo | Backend | Estado |
-|---|---|---|
-| **Autenticación (usuarios + JWT)** | `app/api/v1/auth.py` | Implementado |
-| **Inventario de Aves (lotes)** | `app/api/v1/lots.py` | Implementado |
-| **Producción Diaria (huevos)** | `app/api/v1/production.py` | Implementado |
-| **Alimentación** | `app/api/v1/feeding.py` | Implementado |
-| **Sanidad** (vacunas, enfermedades, mortalidad) | `app/api/v1/health.py` | Implementado |
-| **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | Implementado |
-| **Monitoreo IoT** | `app/api/v1/iot.py` | Implementado |
-| **Pruebas + documentación** | — | Parcial |
+| Módulo | Backend | Frontend | Estado |
+|---|---|---|---|
+| **Autenticación (usuarios + JWT)** | `app/api/v1/auth.py` | `LoginPage` + `AuthContext` | Implementado (login funcional) |
+| **Inventario de Aves (lotes)** | `app/api/v1/lots.py` | Ruta `/lotes` | Backend listo; frontend pendiente |
+| **Producción Diaria (huevos)** | `app/api/v1/production.py` | Ruta `/produccion` | Backend listo; frontend pendiente |
+| **Alimentación** | `app/api/v1/feeding.py` | Ruta `/alimentacion` | Backend listo; frontend pendiente |
+| **Sanidad** (vacunas, enfermedades, mortalidad) | `app/api/v1/health.py` | Ruta `/sanidad` | Backend listo; frontend pendiente |
+| **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | Ruta `/trazabilidad` | Backend listo; frontend pendiente |
+| **Monitoreo IoT** | `app/api/v1/iot.py` | Ruta `/iot` | Backend listo; frontend pendiente |
+| **Frontend base** (layout, routing, dashboard) | — | `components/`, `pages/`, `contexts/` | Iniciado (login + dashboard lite) |
+| **Pruebas + documentación** | — | — | Parcial |
 
 ---
 
@@ -26,16 +27,19 @@ Sistema de gestión modular para la granja avícola **"El Campesino"**. Administ
 | Capa | Tecnología |
 |---|---|
 | Backend | Python 3.11+ · FastAPI · SQLAlchemy 2.0 · Pydantic v2 |
+| Frontend | React 19 · Vite · Bootstrap 5 (react-bootstrap) · React Router · Axios |
 | Autenticación | JWT (python-jose) + bcrypt (passlib) |
 | Base de datos | SQLite (desarrollo) / PostgreSQL (producción) |
 | Testing | Pytest + TestClient (httpx) |
 | Calidad | Ruff (linter) + isort (orden de imports) |
+| Calidad frontend | ESLint + Prettier |
 
 ---
 
 ## Requisitos previos
 
 - Python 3.11+ (probado con 3.14)
+- Node.js 20+ y npm (probado con Node 24 / npm 11)
 - [Postman](https://www.postman.com/) u otro cliente HTTP (opcional, para pruebas manuales)
 
 ---
@@ -82,6 +86,56 @@ Copy-Item .env.example .env
 .venv\Scripts\python.exe -m ruff check app tests
 .venv\Scripts\python.exe -m isort --check-only app tests
 ```
+
+### 6. Iniciar el frontend (React + Bootstrap)
+
+Desde la carpeta `frontend`:
+
+```powershell
+npm install
+Copy-Item .env.example .env
+npm run dev
+```
+
+- Abrir el navegador en <http://localhost:5173>.
+- El dev server de Vite configura un **proxy** (`/api` → `http://localhost:8000`), de modo que el frontend usa rutas relativas y no sufre problemas de CORS.
+- Verificar calidad de código del frontend:
+
+```powershell
+npm run lint
+```
+
+---
+
+## Prueba de conexión frontend ↔ backend (login + dashboard lite)
+
+Con el backend y el frontend corriendo, la conexión entre ambos se valida con una versión lite de login y dashboard:
+
+1. **Registrar un usuario** (una sola vez) vía la API:
+   `POST http://localhost:5173/api/v1/auth/register` (pasa por el proxy hacia el backend).
+
+   ```json
+   {
+     "username": "juan",
+     "email": "juan@example.com",
+     "password": "MiClave123",
+     "full_name": "Juan Perez"
+   }
+   ```
+
+2. **Iniciar sesión** en <http://localhost:5173/login>: la `LoginPage` llama a `POST /api/v1/auth/login`, guarda el `access_token` en `localStorage` y obtiene el usuario con `GET /api/v1/auth/me`.
+
+3. **Dashboard**: al autenticarse se redirige a `/`, donde `DashboardPage` muestra las tarjetas de los 6 módulos del sistema y el nombre del usuario.
+
+4. **Sesión persistente**: el `AuthContext` restaura la sesión al recargar la página validando el token con `/auth/me`. Si el token falta o es inválido, `ProtectedRoute` redirige a `/login`.
+
+5. **Verificación del proxy**: la petición sale por `http://localhost:5173/api/...` (Vite la reenvía a `http://localhost:8000/api/...`), lo que se puede confirmar con las herramientas de desarrollador del navegador (red) o ejecutando:
+
+   ```powershell
+   curl.exe -X POST http://localhost:5173/api/v1/auth/login -H "Content-Type: application/json" -d '{"username":"juan","password":"MiClave123"}'
+   ```
+
+   Una respuesta `200` con `access_token` confirma que frontend y backend están conectados; un `401` indica credenciales incorrectas (la conexión sigue funcionando).
 
 ---
 
@@ -143,6 +197,32 @@ backend/
 La lógica de dominio de lotes se adaptó del **ejercicio en clase**: las clases `LoteGallinas`, `RegistroPosturas`, `RegistroAlimentacion`, `RegistroVacuna`, `RegistroMortalidad` y `LoteService` fueron migradas a modelos ORM y servicios de FastAPI.
 
 Cada acción que modifica datos (crear/actualizar/descartar/avanzar/evaluar un lote, registrar producción, alimentación, vacunas, mortalidad o enfermedades) genera un **registro de auditoría** con un hash SHA-256 encadenado, simulando blockchain para garantizar la integridad del historial.
+
+### Frontend (React + Vite + Bootstrap)
+
+El frontend consume exclusivamente la API REST a través de Axios; nunca accede a la base de datos:
+
+```
+frontend/
+├── public/                      # Archivos estáticos (favicon)
+├── src/
+│   ├── components/              # Componentes reutilizables (Navbar, Layout, ProtectedRoute)
+│   ├── pages/                   # Vistas completas (LoginPage, DashboardPage, módulos)
+│   ├── services/                # Clientes HTTP (apiClient con interceptor JWT, authService)
+│   ├── hooks/                   # Custom Hooks (useAuth)
+│   ├── contexts/                # Contextos de React (AuthContext: login/logout/sesión)
+│   ├── utils/                   # Utilidades (getErrorMessage)
+│   ├── App.jsx                  # Router con rutas públicas y protegidas
+│   └── index.jsx                # Punto de entrada (BrowserRouter + AuthProvider + Bootstrap CSS)
+├── vite.config.js               # Proxy de desarrollo /api → http://localhost:8000
+├── .env.example                 # VITE_API_URL
+└── package.json
+```
+
+- **Servicio HTTP**: `apiClient.js` define una instancia de Axios con `baseURL = VITE_API_URL` (`/api/v1`) y un interceptor que agrega `Authorization: Bearer <token>` a cada petición; en errores `401` limpia el token.
+- **Autenticación**: `AuthContext` expone `user`, `loading`, `login` y `logout`; restaura la sesión validando el token con `GET /auth/me` al cargar la aplicación.
+- **Rutas protegidas**: `ProtectedRoute` redirige a `/login` si no hay sesión y muestra un spinner mientras se valida el token.
+- **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`, `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas. Las de módulos son placeholders que se implementarán en la fase siguiente.
 
 ---
 
