@@ -8,12 +8,15 @@
  * @param {Function} [props.onLoginSuccess] - Callback tras iniciar sesión.
  * @returns {JSX.Element} Formulario de login.
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Alert, Button, Form } from 'react-bootstrap'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 import { getErrorMessage } from '../utils/errors.js'
+import { healthService } from '../services/healthService.js'
 import './LoginPage.css'
+
+const HEALTH_CHECK_INTERVAL_MS = 15000
 
 function LoginPage({ onLoginSuccess }) {
   const { user, login } = useAuth()
@@ -22,6 +25,28 @@ function LoginPage({ onLoginSuccess }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [systemOnline, setSystemOnline] = useState(null)
+
+  useEffect(() => {
+    let mounted = true
+
+    const checkHealth = async () => {
+      try {
+        await healthService.check()
+        if (mounted) setSystemOnline(true)
+      } catch {
+        if (mounted) setSystemOnline(false)
+      }
+    }
+
+    checkHealth()
+    const interval = setInterval(checkHealth, HEALTH_CHECK_INTERVAL_MS)
+
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
+  }, [])
 
   if (user) {
     return <Navigate to="/" replace />
@@ -86,15 +111,21 @@ function LoginPage({ onLoginSuccess }) {
             Olvidé mi contraseña
           </a>
         </div>
-        <p>
-          ¿No tiene una cuenta? <Link to="/register">Crear cuenta</Link>
-        </p>
       </div>
 
       <div className="column info">
         <div className="system-status">
-          <div className="status"></div>
-          <span>Estado del sistema: Óptimo</span>
+          <div
+            className={`status ${systemOnline === null ? '' : systemOnline ? 'online' : 'offline'}`}
+          ></div>
+          <span>
+            Estado del sistema:{' '}
+            {systemOnline === null
+              ? 'Verificando...'
+              : systemOnline
+                ? 'Óptimo'
+                : 'Sin conexión'}
+          </span>
         </div>
         <div className="info-system">
           <h2>Una avicultura más inteligente comienza aquí.</h2>
