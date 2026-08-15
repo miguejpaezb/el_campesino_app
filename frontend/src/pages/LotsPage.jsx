@@ -29,9 +29,9 @@ const toISODate = (d) => {
 const mortalityOf = (lot) =>
   lot.initial_quantity > 0
     ? Math.round(
-      ((lot.initial_quantity - lot.current_quantity) / lot.initial_quantity) *
-      100,
-    )
+        ((lot.initial_quantity - lot.current_quantity) / lot.initial_quantity) *
+          100,
+      )
     : 0
 
 function CreateModal({ open, onClose, onSubmit }) {
@@ -91,10 +91,10 @@ function CreateModal({ open, onClose, onSubmit }) {
       title="Crear lote de aves"
       subtitle="Registra un nuevo lote en la granja"
       footer={
-        <div className="modal-actions">
+        <div className="app-modal-actions">
           <button
             type="button"
-            className="btn-secondary"
+            className="app-btn-secondary"
             onClick={onClose}
             disabled={submitting}
           >
@@ -102,7 +102,7 @@ function CreateModal({ open, onClose, onSubmit }) {
           </button>
           <button
             type="submit"
-            className="btn-primary"
+            className="app-btn-primary"
             form="create-lot-form"
             disabled={submitting}
           >
@@ -112,45 +112,47 @@ function CreateModal({ open, onClose, onSubmit }) {
       }
     >
       <form id="create-lot-form" onSubmit={handleSubmit} noValidate>
-        <div className="form-group">
-          <label className="form-label" htmlFor="create-lot-code">
+        <div className="app-form-group">
+          <label className="app-form-label" htmlFor="create-lot-code">
             Código del lote
           </label>
           <input
             id="create-lot-code"
-            className="form-control"
+            className="app-form-control"
             type="text"
             maxLength={20}
             placeholder="Ej: lote0003"
             value={form.lot_code}
             onChange={(event) => setField('lot_code', event.target.value)}
           />
-          {errors.lot_code && <p className="form-error">{errors.lot_code}</p>}
+          {errors.lot_code && (
+            <p className="app-form-error">{errors.lot_code}</p>
+          )}
         </div>
 
-        <div className="form-group">
-          <label className="form-label" htmlFor="create-breed">
+        <div className="app-form-group">
+          <label className="app-form-label" htmlFor="create-breed">
             Raza
           </label>
           <input
             id="create-breed"
-            className="form-control"
+            className="app-form-control"
             type="text"
             maxLength={50}
             placeholder="Ej: Hy-Line Brown"
             value={form.breed}
             onChange={(event) => setField('breed', event.target.value)}
           />
-          {errors.breed && <p className="form-error">{errors.breed}</p>}
+          {errors.breed && <p className="app-form-error">{errors.breed}</p>}
         </div>
 
-        <div className="form-group">
-          <label className="form-label" htmlFor="create-quantity">
+        <div className="app-form-group">
+          <label className="app-form-label" htmlFor="create-quantity">
             Cantidad inicial
           </label>
           <input
             id="create-quantity"
-            className="form-control"
+            className="app-form-control"
             type="number"
             min="1"
             step="1"
@@ -161,30 +163,30 @@ function CreateModal({ open, onClose, onSubmit }) {
             }
           />
           {errors.initial_quantity && (
-            <p className="form-error">{errors.initial_quantity}</p>
+            <p className="app-form-error">{errors.initial_quantity}</p>
           )}
         </div>
 
-        <div className="form-group">
-          <label className="form-label" htmlFor="create-entry-date">
+        <div className="app-form-group">
+          <label className="app-form-label" htmlFor="create-entry-date">
             Fecha de ingreso
           </label>
           <input
             id="create-entry-date"
-            className="form-control"
+            className="app-form-control"
             type="date"
             value={form.entry_date}
             onChange={(event) => setField('entry_date', event.target.value)}
           />
         </div>
 
-        <div className="form-group">
-          <label className="form-label" htmlFor="create-observations">
+        <div className="app-form-group">
+          <label className="app-form-label" htmlFor="create-observations">
             Observaciones
           </label>
           <textarea
             id="create-observations"
-            className="form-control"
+            className="app-form-control"
             rows={3}
             maxLength={500}
             placeholder="Notas adicionales del lote"
@@ -224,10 +226,10 @@ function EditModal({ lot, open, onClose, onSubmit }) {
       title={`Editando ${lot?.lot_code || ''}`}
       subtitle="Modifica los datos del lote"
       footer={
-        <div className="modal-actions">
+        <div className="app-modal-actions">
           <button
             type="button"
-            className="btn-secondary"
+            className="app-btn-secondary"
             onClick={onClose}
             disabled={submitting}
           >
@@ -235,7 +237,7 @@ function EditModal({ lot, open, onClose, onSubmit }) {
           </button>
           <button
             type="submit"
-            className="btn-primary"
+            className="app-btn-primary"
             form="edit-lot-form"
             disabled={submitting}
           >
@@ -245,13 +247,13 @@ function EditModal({ lot, open, onClose, onSubmit }) {
       }
     >
       <form id="edit-lot-form" onSubmit={handleSubmit} noValidate>
-        <div className="form-group">
-          <label className="form-label" htmlFor="edit-breed">
+        <div className="app-form-group">
+          <label className="app-form-label" htmlFor="edit-breed">
             Raza
           </label>
           <input
             id="edit-breed"
-            className="form-control"
+            className="app-form-control"
             type="text"
             maxLength={50}
             value={breed}
@@ -260,16 +262,16 @@ function EditModal({ lot, open, onClose, onSubmit }) {
               setError('')
             }}
           />
-          {error && <p className="form-error">{error}</p>}
+          {error && <p className="app-form-error">{error}</p>}
         </div>
 
-        <div className="form-group">
-          <label className="form-label" htmlFor="edit-observations">
+        <div className="app-form-group">
+          <label className="app-form-label" htmlFor="edit-observations">
             Observaciones
           </label>
           <textarea
             id="edit-observations"
-            className="form-control"
+            className="app-form-control"
             rows={4}
             maxLength={500}
             value={observations}
@@ -341,11 +343,11 @@ function DiscardModal({ lot, open, onClose, onSubmit }) {
       title="Descartar lote"
       subtitle={lot ? `${lot.lot_code} · ${lot.breed}` : ''}
       footer={
-        <div className="modal-actions">
+        <div className="app-modal-actions">
           {counting || discarding ? (
             <button
               type="button"
-              className="btn-secondary"
+              className="app-btn-secondary"
               onClick={cancel}
               disabled={discarding}
             >
@@ -353,12 +355,16 @@ function DiscardModal({ lot, open, onClose, onSubmit }) {
             </button>
           ) : (
             <>
-              <button type="button" className="btn-secondary" onClick={onClose}>
+              <button
+                type="button"
+                className="app-btn-secondary"
+                onClick={onClose}
+              >
                 Cancelar
               </button>
               <button
                 type="button"
-                className="btn-danger"
+                className="app-btn-danger"
                 onClick={startCountdown}
                 disabled={!reason.trim()}
               >
@@ -374,12 +380,12 @@ function DiscardModal({ lot, open, onClose, onSubmit }) {
         el motivo del descarte.
       </p>
 
-      <label className="form-label" htmlFor="discard-reason">
+      <label className="app-form-label" htmlFor="discard-reason">
         Razón del descarte
       </label>
       <textarea
         id="discard-reason"
-        className="form-control"
+        className="app-form-control"
         rows={3}
         maxLength={500}
         placeholder="Indica el motivo del descarte"
@@ -418,8 +424,8 @@ function EvaluateResultModal({ data, onClose }) {
       title="Resultado de la evaluación"
       subtitle={lot?.lot_code}
       footer={
-        <div className="modal-actions">
-          <button type="button" className="btn-primary" onClick={onClose}>
+        <div className="app-modal-actions">
+          <button type="button" className="app-btn-primary" onClick={onClose}>
             Cerrar
           </button>
         </div>
@@ -429,8 +435,9 @@ function EvaluateResultModal({ data, onClose }) {
       <p className="evaluate-state">
         Estado resultante:{' '}
         <span
-          className={`estado estado-${result?.is_active ? 'activo' : 'descartado'
-            }`}
+          className={`estado estado-${
+            result?.is_active ? 'activo' : 'descartado'
+          }`}
         >
           {result?.is_active ? 'Activo' : 'Descartado'}
         </span>
@@ -485,8 +492,8 @@ function SummaryModal({ data, onClose }) {
       subtitle="Indicadores del lote"
       size="wide"
       footer={
-        <div className="modal-actions">
-          <button type="button" className="btn-primary" onClick={onClose}>
+        <div className="app-modal-actions">
+          <button type="button" className="app-btn-primary" onClick={onClose}>
             Cerrar
           </button>
         </div>
@@ -677,6 +684,11 @@ function LotsPage() {
     }
   }
 
+  const resetSelectors = () => {
+    setAccion('')
+    setFiltro('')
+  }
+
   const handleApply = () => {
     if (!accion && !filtro) return
 
@@ -690,6 +702,7 @@ function LotsPage() {
 
     if (filtro) {
       setFiltroAplicado(filtro)
+      resetSelectors()
       return
     }
 
@@ -700,7 +713,16 @@ function LotsPage() {
     }
 
     if (accion === 'advance') {
+      const discarded = selected.filter((lot) => !lot.is_active)
+      if (discarded.length > 0) {
+        pushToast(
+          'error',
+          `El lote ${discarded[0].lot_code} se encuentra descartado y no puede avanzar de semana.`,
+        )
+        return
+      }
       handleAdvanceWeek(selected)
+      resetSelectors()
       return
     }
 
@@ -715,21 +737,38 @@ function LotsPage() {
     const lot = selected[0]
     if (accion === 'edit') {
       setEditLot(lot)
+      resetSelectors()
     } else if (accion === 'evaluate') {
       if (!lot.is_active) {
         pushToast('error', 'El lote ya se encuentra descartado.')
         return
       }
       handleEvaluate(lot)
+      resetSelectors()
     } else if (accion === 'summary') {
       handleSummary(lot)
+      resetSelectors()
     } else if (accion === 'discard') {
       if (!lot.is_active) {
         pushToast('error', 'El lote ya se encuentra descartado.')
         return
       }
       setDiscardLot(lot)
+      resetSelectors()
     }
+  }
+
+  const handleClearFilters = () => {
+    setSearch('')
+    setAccion('')
+    setFiltro('')
+    setFiltroAplicado('')
+    setSelectedIds([])
+    setCreateOpen(false)
+    setEditLot(null)
+    setEvaluateResult(null)
+    setSummaryData(null)
+    setDiscardLot(null)
   }
 
   const handleCreateSubmit = async (values) => {
@@ -776,70 +815,89 @@ function LotsPage() {
       <PageHeader eyebrow="Inventario de Aves" title="Gestión de lotes" />
 
       <div className="lots-toolbar">
-        <div className="lots-search">
-          <input
-            type="search"
-            placeholder="Buscar por ID o código de lote"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            aria-label="Buscar lote"
-          />
+        <div className="lots-toolbar-row lots-toolbar-search">
+          <div className="lots-search">
+            <input
+              type="search"
+              placeholder="Buscar por ID o código de lote"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              aria-label="Buscar lote"
+            />
+          </div>
+
+          <button
+            className="btn-add-mobile"
+            onClick={() => setCreateOpen(true)}
+            aria-label="Crear lote"
+          >
+            <img src="/icons/add.svg" alt="Crear lote" />
+          </button>
+
+          <button
+            className="btn-clear-mobile"
+            onClick={handleClearFilters}
+            aria-label="Limpiar filtros"
+          >
+            <img src="/icons/clean.svg" alt="Limpiar filtros" />
+          </button>
+        </div>
+
+        <div className="lots-toolbar-row lots-toolbar-actions">
+          <div className="action-field action-accion">
+            <label htmlFor="action-select">Acción por lote</label>
+            <select
+              id="action-select"
+              value={accion}
+              onChange={(event) => setAccion(event.target.value)}
+            >
+              <option value="">Acción por lote</option>
+              <option value="edit">Editar</option>
+              <option value="advance">Avanzar semana</option>
+              <option value="evaluate">Evaluar</option>
+              <option value="summary">Resumen</option>
+              <option value="discard">Descartar</option>
+            </select>
+          </div>
+
+          <div className="action-field action-filtro">
+            <label htmlFor="filter-select">Filtro</label>
+            <select
+              id="filter-select"
+              value={filtro}
+              onChange={(event) => setFiltro(event.target.value)}
+            >
+              <option value="">Filtro</option>
+              <option value="active">Activos</option>
+              <option value="discarded">Descartados</option>
+            </select>
+          </div>
+
+          <button
+            className="btn-apply"
+            onClick={handleApply}
+            disabled={accionBusy}
+          >
+            <span className="btn-apply-label">
+              {accionBusy ? 'Procesando...' : 'Aplicar'}
+            </span>
+            <img
+              className="btn-apply-icon"
+              src="/icons/arrow.svg"
+              alt="Aplicar"
+            />
+          </button>
         </div>
 
         <button
-          className="btn-add-mobile"
-          onClick={() => setCreateOpen(true)}
-          aria-label="Crear lote"
+          className="app-btn-secondary lots-clear-btn"
+          onClick={handleClearFilters}
         >
-          <img src="/icons/add.svg" alt="Crear lote" />
+          Limpiar
         </button>
 
-        <div className="action-field action-accion">
-          <label htmlFor="action-select">Acción por lote</label>
-          <select
-            id="action-select"
-            value={accion}
-            onChange={(event) => setAccion(event.target.value)}
-          >
-            <option value="">Acción por lote</option>
-            <option value="edit">Editar</option>
-            <option value="advance">Avanzar semana</option>
-            <option value="evaluate">Evaluar</option>
-            <option value="summary">Resumen</option>
-            <option value="discard">Descartar</option>
-          </select>
-        </div>
-
-        <div className="action-field action-filtro">
-          <label htmlFor="filter-select">Filtro</label>
-          <select
-            id="filter-select"
-            value={filtro}
-            onChange={(event) => setFiltro(event.target.value)}
-          >
-            <option value="">Filtro</option>
-            <option value="active">Activos</option>
-            <option value="discarded">Descartados</option>
-          </select>
-        </div>
-
         <button
-          className="btn-apply"
-          onClick={handleApply}
-          disabled={accionBusy}
-        >
-          <span className="btn-apply-label">
-            {accionBusy ? 'Procesando...' : 'Aplicar'}
-          </span>
-          <img
-            className="btn-apply-icon"
-            src="/icons/arrow.svg"
-            alt="Aplicar"
-          />
-        </button>
-
-        <button
-          className="btn-primary lots-create-btn"
+          className="app-btn-primary lots-create-btn"
           onClick={() => setCreateOpen(true)}
         >
           Crear lote
@@ -901,8 +959,9 @@ function LotsPage() {
                     <td className="col-desktop">{mortalityOf(lot)}%</td>
                     <td>
                       <span
-                        className={`estado estado-${lot.is_active ? 'activo' : 'descartado'
-                          }`}
+                        className={`estado estado-${
+                          lot.is_active ? 'activo' : 'descartado'
+                        }`}
                       >
                         {estadoLabel(lot.is_active)}
                       </span>

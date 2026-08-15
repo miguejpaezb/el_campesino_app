@@ -9,7 +9,7 @@ import apiClient from './apiClient.js'
 
 export const lotService = {
   async getLots() {
-    const { data } = await apiClient.get('/lots')
+    const { data } = await apiClient.get('/lots/')
     return data
   },
 
@@ -19,7 +19,7 @@ export const lotService = {
   },
 
   async createLot(payload) {
-    const { data } = await apiClient.post('/lots', payload)
+    const { data } = await apiClient.post('/lots/', payload)
     return data
   },
 

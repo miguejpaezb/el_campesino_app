@@ -18,6 +18,10 @@
   box-shadow: 0 12px 28px rgba(67, 67, 67, 0.06);
 }
 
+.lots-toolbar-row {
+  display: contents;
+}
+
 .lots-search {
   flex: 1 1 220px;
   min-width: 180px;
@@ -44,9 +48,9 @@
   color: #9a9a9a;
 }
 
-.btn-primary,
-.btn-secondary,
-.btn-danger,
+.app-btn-primary,
+.app-btn-secondary,
+.app-btn-danger,
 .btn-apply {
   border-radius: 12px;
   padding: 11px 18px;
@@ -58,47 +62,48 @@
   white-space: nowrap;
 }
 
-.btn-primary {
+.app-btn-primary {
   background: var(--color-yelow);
   border: 1px solid var(--color-yelow);
   color: #1d1d1d;
 }
 
-.btn-primary:hover {
+.app-btn-primary:hover {
   background: #e6b93a;
   border-color: #e6b93a;
 }
 
-.btn-secondary {
+.app-btn-secondary {
   background: #ffffff;
   border: 1.5px solid rgba(88, 88, 88, 0.25);
   color: #4a4a4a;
 }
 
-.btn-secondary:hover {
+.app-btn-secondary:hover {
   background: #f5f3ef;
 }
 
-.btn-danger {
+.app-btn-danger {
   background: #c0392b;
   border: 1px solid #c0392b;
   color: #ffffff;
 }
 
-.btn-danger:hover {
+.app-btn-danger:hover {
   background: #a93226;
   border-color: #a93226;
 }
 
-.btn-primary:disabled,
-.btn-secondary:disabled,
-.btn-danger:disabled,
+.app-btn-primary:disabled,
+.app-btn-secondary:disabled,
+.app-btn-danger:disabled,
 .btn-apply:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.btn-add-mobile {
+.btn-add-mobile,
+.btn-clear-mobile {
   display: none;
 }
 
@@ -151,7 +156,8 @@
   display: none;
 }
 
-.lots-create-btn {
+.lots-create-btn,
+.lots-clear-btn {
   flex: 0 0 auto;
 }
 
@@ -246,7 +252,7 @@
 
 /* ============================ Modales ============================ */
 
-.modal-overlay {
+.app-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
@@ -267,7 +273,7 @@
   }
 }
 
-.modal-shell {
+.app-modal-shell {
   width: 100%;
   max-width: 480px;
   max-height: calc(100vh - 40px);
@@ -278,7 +284,7 @@
   animation: modal-rise 0.2s ease;
 }
 
-.modal-shell.modal-wide {
+.app-modal-shell.app-modal-wide {
   max-width: 640px;
 }
 
@@ -293,7 +299,7 @@
   }
 }
 
-.modal-header {
+.app-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -301,20 +307,20 @@
   padding: 20px 22px 12px;
 }
 
-.modal-header h3 {
+.app-modal-header h3 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 800;
   color: #2f2f2f;
 }
 
-.modal-header p {
+.app-modal-header p {
   margin: 4px 0 0;
   font-size: 0.85rem;
   color: #8a8a8a;
 }
 
-.modal-close {
+.app-modal-close {
   background: none;
   border: none;
   cursor: pointer;
@@ -325,27 +331,27 @@
   justify-content: center;
 }
 
-.modal-close:hover {
+.app-modal-close:hover {
   background: #f5f3ef;
 }
 
-.modal-close img {
+.app-modal-close img {
   width: 18px;
   height: 18px;
 }
 
-.modal-body {
+.app-modal-body {
   padding: 4px 22px 20px;
 }
 
-.modal-footer {
+.app-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   padding: 0 22px 22px;
 }
 
-.modal-actions {
+.app-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -354,20 +360,20 @@
 
 /* ============================ Formularios ============================ */
 
-.form-group {
+.app-form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-bottom: 14px;
 }
 
-.form-label {
+.app-form-label {
   font-size: 0.82rem;
   font-weight: 600;
   color: #4a4a4a;
 }
 
-.form-control {
+.app-form-control {
   width: 100%;
   padding: 10px 12px;
   font-size: 0.95rem;
@@ -380,15 +386,15 @@
   box-sizing: border-box;
 }
 
-.form-control:focus {
+.app-form-control:focus {
   border-color: var(--color-brown);
 }
 
-textarea.form-control {
+textarea.app-form-control {
   resize: vertical;
 }
 
-.form-error {
+.app-form-error {
   margin: 0;
   font-size: 0.78rem;
   color: #c0392b;
@@ -494,7 +500,7 @@ textarea.form-control {
 
 /* ============================ Toasts ============================ */
 
-.toast-container {
+.app-toast-container {
   position: fixed;
   top: 18px;
   right: 18px;
@@ -505,7 +511,7 @@ textarea.form-control {
   max-width: min(360px, calc(100vw - 36px));
 }
 
-.toast {
+.app-toast {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -514,10 +520,10 @@ textarea.form-control {
   padding: 12px 14px;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  animation: toast-in 0.25s ease;
+  animation: app-toast-in 0.25s ease;
 }
 
-@keyframes toast-in {
+@keyframes app-toast-in {
   from {
     transform: translateX(24px);
     opacity: 0;
@@ -528,33 +534,33 @@ textarea.form-control {
   }
 }
 
-.toast .toast-dot {
+.app-toast .app-toast-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.toast-success .toast-dot {
+.app-toast-success .app-toast-dot {
   background: #2e9e46;
 }
 
-.toast-error .toast-dot {
+.app-toast-error .app-toast-dot {
   background: #c0392b;
 }
 
-.toast-info .toast-dot {
+.app-toast-info .app-toast-dot {
   background: var(--color-brown);
 }
 
-.toast p {
+.app-toast p {
   margin: 0;
   flex: 1;
   font-size: 0.88rem;
   color: #2f2f2f;
 }
 
-.toast-close {
+.app-toast-close {
   background: none;
   border: none;
   cursor: pointer;
@@ -564,7 +570,7 @@ textarea.form-control {
   padding: 2px 4px;
 }
 
-.toast-close:hover {
+.app-toast-close:hover {
   color: #2f2f2f;
 }
 
@@ -572,19 +578,29 @@ textarea.form-control {
 
 @media (max-width: 768px) {
   .lots-toolbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    grid-template-areas:
-      'search search add'
-      'accion filtro aplicar';
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     gap: 8px;
     padding: 12px;
   }
 
+  .lots-toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lots-toolbar-search {
+    flex: 1 1 auto;
+  }
+
+  .lots-toolbar-actions {
+    flex: 1 1 auto;
+  }
+
   .lots-search {
-    grid-area: search;
-    flex: none;
+    flex: 1 1 auto;
     min-width: 0;
     border-radius: 10px;
     padding: 0 10px;
@@ -596,10 +612,10 @@ textarea.form-control {
   }
 
   .btn-add-mobile {
-    grid-area: add;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto;
     width: 40px;
     height: 40px;
     padding: 0;
@@ -618,16 +634,31 @@ textarea.form-control {
     height: 20px;
   }
 
+  .btn-clear-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1.5px solid rgba(88, 88, 88, 0.25);
+    cursor: pointer;
+  }
+
+  .btn-clear-mobile:hover {
+    background: #f5f3ef;
+  }
+
+  .btn-clear-mobile img {
+    width: 18px;
+    height: 18px;
+  }
+
   .action-field {
-    flex: none;
-  }
-
-  .action-accion {
-    grid-area: accion;
-  }
-
-  .action-filtro {
-    grid-area: filtro;
+    flex: 0 0 auto;
   }
 
   .action-field label {
@@ -642,10 +673,10 @@ textarea.form-control {
   }
 
   .btn-apply {
-    grid-area: aplicar;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto;
     width: 40px;
     height: 40px;
     padding: 0;
@@ -663,7 +694,8 @@ textarea.form-control {
     transform: rotate(180deg);
   }
 
-  .lots-create-btn {
+  .lots-create-btn,
+  .lots-clear-btn {
     display: none;
   }
 
@@ -700,7 +732,7 @@ textarea.form-control {
     padding: 4px 10px;
   }
 
-  .modal-shell {
+  .app-modal-shell {
     max-width: 100%;
   }
 

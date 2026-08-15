@@ -32,27 +32,31 @@ function Modal({ open, title, subtitle, onClose, footer, children, size }) {
 
   return createPortal(
     <div
-      className="modal-overlay"
+      className="app-modal-overlay"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
     >
       <div
-        className={`modal-shell ${size ? `modal-${size}` : ''}`}
+        className={`app-modal-shell ${size ? `app-modal-${size}` : ''}`}
         role="dialog"
         aria-modal="true"
       >
-        <div className="modal-header">
+        <div className="app-modal-header">
           <div>
             <h3>{title}</h3>
             {subtitle && <p>{subtitle}</p>}
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Cerrar">
+          <button
+            className="app-modal-close"
+            onClick={onClose}
+            aria-label="Cerrar"
+          >
             <img src="/icons/close.svg" alt="×" />
           </button>
         </div>
-        <div className="modal-body">{children}</div>
-        {footer && <div className="modal-footer">{footer}</div>}
+        <div className="app-modal-body">{children}</div>
+        {footer && <div className="app-modal-footer">{footer}</div>}
       </div>
     </div>,
     document.body,

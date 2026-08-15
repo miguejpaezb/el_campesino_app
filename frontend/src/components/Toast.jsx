@@ -11,17 +11,17 @@
  */
 function Toast({ toasts, onDismiss }) {
   return (
-    <div className="toast-container" aria-live="polite">
+    <div className="app-toast-container" aria-live="polite">
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`toast toast-${toast.type}`}
+          className={`app-toast app-toast-${toast.type}`}
           role="status"
         >
-          <span className="toast-dot" aria-hidden="true"></span>
+          <span className="app-toast-dot" aria-hidden="true"></span>
           <p>{toast.message}</p>
           <button
-            className="toast-close"
+            className="app-toast-close"
             onClick={() => onDismiss(toast.id)}
             aria-label="Cerrar notificación"
           >

@@ -44,7 +44,9 @@ const emptyDashboard = (from, to) => ({
 
 export const dashboardService = {
   async getActiveLots() {
-    const { data } = await apiClient.get('/lots', { params: { active: true } })
+    const { data } = await apiClient.get('/lots/', {
+      params: { active: true },
+    })
     return data
   },
 
