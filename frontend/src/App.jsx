@@ -11,6 +11,7 @@ import PageHeader from './components/PageHeader.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import LotsPage from './pages/LotsPage.jsx'
 
 function App() {
   return (
@@ -31,10 +32,7 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <PageHeader
-                eyebrow="Inventario de Aves"
-                title="En construcción"
-              />
+              <LotsPage />
             </Layout>
           </ProtectedRoute>
         }
