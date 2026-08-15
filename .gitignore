@@ -3,6 +3,8 @@
 Thumbs.db
 ehthumbs.db
 Icon?
+!frontend/public/icons/
+!frontend/public/icons/*
 
 # Archivos de editor / IDE
 .vs/

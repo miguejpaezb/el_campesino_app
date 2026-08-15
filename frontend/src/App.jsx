@@ -7,6 +7,7 @@
  */
 import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
+import PageHeader from './components/PageHeader.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
@@ -30,8 +31,10 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <h1>Inventario de Aves</h1>
-              <p>En construcción.</p>
+              <PageHeader
+                eyebrow="Inventario de Aves"
+                title="En construcción"
+              />
             </Layout>
           </ProtectedRoute>
         }
@@ -41,8 +44,7 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <h1>Alimentación</h1>
-              <p>En construcción.</p>
+              <PageHeader eyebrow="Alimentación" title="En construcción" />
             </Layout>
           </ProtectedRoute>
         }
@@ -52,8 +54,7 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <h1>Sanidad</h1>
-              <p>En construcción.</p>
+              <PageHeader eyebrow="Sanidad" title="En construcción" />
             </Layout>
           </ProtectedRoute>
         }
@@ -63,8 +64,7 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <h1>Producción Diaria</h1>
-              <p>En construcción.</p>
+              <PageHeader eyebrow="Producción Diaria" title="En construcción" />
             </Layout>
           </ProtectedRoute>
         }
@@ -74,8 +74,7 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <h1>Trazabilidad</h1>
-              <p>En construcción.</p>
+              <PageHeader eyebrow="Trazabilidad" title="En construcción" />
             </Layout>
           </ProtectedRoute>
         }
@@ -85,8 +84,30 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <h1>Monitoreo IoT</h1>
-              <p>En construcción.</p>
+              <PageHeader eyebrow="Monitoreo IoT" title="En construcción" />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/usuarios"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <PageHeader eyebrow="Usuarios" title="En construcción" />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cuenta"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <PageHeader
+                eyebrow="Administrar cuenta"
+                title="En construcción"
+              />
             </Layout>
           </ProtectedRoute>
         }
