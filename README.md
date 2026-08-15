@@ -11,13 +11,13 @@ Sistema de gestión modular para la granja avícola **"El Campesino"**. Administ
 | Módulo | Backend | Frontend | Estado |
 |---|---|---|---|
 | **Autenticación (usuarios + JWT)** | `app/api/v1/auth.py` | `LoginPage` + `AuthContext` | Implementado (login funcional) |
-| **Inventario de Aves (lotes)** | `app/api/v1/lots.py` | Ruta `/lotes` | Backend listo; frontend pendiente |
+| **Inventario de Aves (lotes)** | `app/api/v1/lots.py` | `LotsPage` (ruta `/lotes`) | Implementado (listado, buscar, filtrar, crear, editar, avanzar semana, evaluar, resumen, descartar) |
 | **Producción Diaria (huevos)** | `app/api/v1/production.py` | Ruta `/produccion` | Backend listo; frontend pendiente |
 | **Alimentación** | `app/api/v1/feeding.py` | Ruta `/alimentacion` | Backend listo; frontend pendiente |
 | **Sanidad** (vacunas, enfermedades, mortalidad) | `app/api/v1/health.py` | Ruta `/sanidad` | Backend listo; frontend pendiente |
 | **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | Ruta `/trazabilidad` | Backend listo; frontend pendiente |
 | **Monitoreo IoT** | `app/api/v1/iot.py` | Ruta `/iot` | Backend listo; frontend pendiente |
-| **Frontend base** (layout, routing, dashboard) | — | `components/`, `pages/`, `contexts/` | Iniciado (login + dashboard lite) |
+| **Frontend base** (layout, sidebar, dashboard) | — | `components/`, `pages/`, `contexts/`, `services/` | Implementado (sidebar responsive, menú de usuario y dashboard con datos del backend) |
 | **Pruebas + documentación** | — | — | Parcial |
 
 ---
@@ -107,9 +107,9 @@ npm run lint
 
 ---
 
-## Prueba de conexión frontend ↔ backend (login + dashboard lite)
+## Prueba de conexión frontend ↔ backend (login + dashboard + lotes)
 
-Con el backend y el frontend corriendo, la conexión entre ambos se valida con una versión lite de login y dashboard:
+Con el backend y el frontend corriendo, la conexión entre ambos se valida con el login, el dashboard y el módulo de lotes:
 
 1. **Crear el usuario admin inicial** con el script CLI:
 
@@ -122,11 +122,13 @@ Con el backend y el frontend corriendo, la conexión entre ambos se valida con u
 
 2. **Iniciar sesión** en <http://localhost:5173/login>: la `LoginPage` llama a `POST /api/v1/auth/login`, guarda el `access_token` en `localStorage` y obtiene el usuario con `GET /api/v1/auth/me`.
 
-3. **Dashboard**: al autenticarse se redirige a `/`, donde `DashboardPage` muestra las tarjetas de los 6 módulos del sistema y el nombre del usuario.
+3. **Dashboard**: al autenticarse se redirige a `/`, donde `DashboardPage` muestra las tarjetas de producción (producción hoy, lotes activos, tasa de postura y mortalidad), el gráfico semanal de huevos, el resumen de la semana y el historial de acciones. El contador de **lotes activos** se obtiene del backend con `GET /api/v1/lots/?active=true`.
 
-4. **Sesión persistente**: el `AuthContext` restaura la sesión al recargar la página validando el token con `/auth/me`. Si el token falta o es inválido, `ProtectedRoute` redirige a `/login`.
+4. **Módulo de lotes** (`/lotes`): `LotsPage` lista los lotes y permite buscarlos por ID o `lot_code`, filtrarlos por estado y ejecutar acciones (crear, editar, avanzar semana, evaluar, resumen y descartar) contra la API real. Nota: las llamadas de colección usan la barra final (`/lots/`) para evitar el redirect 307 de FastAPI, que hacía perder el header de autorización.
 
-5. **Verificación del proxy**: la petición sale por `http://localhost:5173/api/...` (Vite la reenvía a `http://localhost:8000/api/...`), lo que se puede confirmar con las herramientas de desarrollador del navegador (red) o ejecutando:
+5. **Sesión persistente**: el `AuthContext` restaura la sesión al recargar la página validando el token con `/auth/me`. Si el token falta o es inválido, `ProtectedRoute` redirige a `/login`.
+
+6. **Verificación del proxy**: la petición sale por `http://localhost:5173/api/...` (Vite la reenvía a `http://localhost:8000/api/...`), lo que se puede confirmar con las herramientas de desarrollador del navegador (red) o ejecutando:
 
    ```powershell
    curl.exe -X POST http://localhost:5173/api/v1/auth/login -H "Content-Type: application/json" -d '{"username":"juan","password":"MiClave123"}'
@@ -201,13 +203,27 @@ El frontend consume exclusivamente la API REST a través de Axios; nunca accede 
 
 ```
 frontend/
-├── public/                      # Archivos estáticos (favicon)
+├── public/                      # Archivos estáticos (favicon, iconos SVG)
 ├── src/
-│   ├── components/              # Componentes reutilizables (Navbar, Layout, ProtectedRoute)
-│   ├── pages/                   # Vistas completas (LoginPage, DashboardPage, módulos)
-│   ├── services/                # Clientes HTTP (apiClient con interceptor JWT, authService)
+│   ├── components/              # Componentes reutilizables
+│   │   ├── Layout.jsx/css       # Layout principal (sidebar + main-container)
+│   │   ├── Sidebar.jsx          # Menú lateral (colapso persistido + drawer móvil)
+│   │   ├── PageHeader.jsx       # Encabezado reutilizable (eyebrow + título)
+│   │   ├── Modal.jsx            # Modal reutilizable (overlay, tecla Escape, footer)
+│   │   ├── Toast.jsx            # Notificaciones toast (éxito/error/info)
+│   │   ├── ProtectedRoute.jsx   # Guard de rutas autenticadas
+│   │   └── ErrorBoundary.jsx
+│   ├── pages/                   # Vistas completas
+│   │   ├── LoginPage.jsx/css
+│   │   ├── DashboardPage.jsx/css
+│   │   └── LotsPage.jsx/css     # Módulo Inventario de Aves (lotes)
+│   ├── services/                # Clientes HTTP por módulo
+│   │   ├── apiClient.js         # Axios con interceptor JWT (baseURL /api/v1)
+│   │   ├── authService.js
+│   │   ├── lotService.js        # CRUD + acciones de lotes
+│   │   └── dashboardService.js  # Agregación de datos del dashboard
 │   ├── hooks/                   # Custom Hooks (useAuth)
-│   ├── contexts/                # Contextos de React (AuthContext: login/logout/sesión)
+│   ├── contexts/                # AuthContext (login/logout/sesión)
 │   ├── utils/                   # Utilidades (getErrorMessage)
 │   ├── App.jsx                  # Router con rutas públicas y protegidas
 │   └── index.jsx                # Punto de entrada (BrowserRouter + AuthProvider + Bootstrap CSS)
@@ -219,7 +235,19 @@ frontend/
 - **Servicio HTTP**: `apiClient.js` define una instancia de Axios con `baseURL = VITE_API_URL` (`/api/v1`) y un interceptor que agrega `Authorization: Bearer <token>` a cada petición; en errores `401` limpia el token.
 - **Autenticación**: `AuthContext` expone `user`, `loading`, `login` y `logout`; restaura la sesión validando el token con `GET /auth/me` al cargar la aplicación.
 - **Rutas protegidas**: `ProtectedRoute` redirige a `/login` si no hay sesión y muestra un spinner mientras se valida el token.
-- **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`, `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas. Las de módulos son placeholders que se implementarán en la fase siguiente.
+- **Layout y sidebar**: `Layout` + `Sidebar` replican el diseño de referencia con colapso persistido en `localStorage` (escritorio) y drawer móvil; el menú de usuario (`avatar`) permite administrar la cuenta o cerrar sesión.
+- **UI propia**: los componentes `Modal` y `Toast` usan clases propias con prefijo `app-` para no colisionar con las clases de Bootstrap (p. ej. `.toast`, `.modal-header`, `.btn-primary`), que ocultaban las notificaciones.
+- **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`, `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas. El módulo **`/lotes`** está implementado; el resto de módulos son placeholders que se implementarán en fases siguientes.
+
+### Inventario de Aves (frontend)
+
+`LotsPage` (`/lotes`) consume los endpoints de lotes a través de `lotService.js`:
+
+- **Listado**: tabla con selección múltiple, ID, `lot_code`, aves actuales, semana actual, mortalidad (%) y estado (badge "Activo"/"Descartado"). Buscador en vivo por ID o `lot_code` y filtro por estado.
+- **Crear lote**: modal con `lot_code`, raza, cantidad inicial, fecha de ingreso y observaciones (validación client-side).
+- **Acciones por lote** (selector + botón "Aplicar"): editar (modal "Editando &lt;código&gt;" con raza y observaciones), avanzar semana (permite uno o varios lotes), evaluar (toast si aún no es la semana 90, modal con el resultado en caso contrario), resumen (modal con los indicadores productivos) y descartar (modal que pide la razón, cuenta regresiva de 5 s con barra decreciente y opción de cancelar).
+- **Reglas de validación**: no se combinan acción + filtro a la vez; las acciones individuales exigen exactamente un lote; tras ejecutar una acción los selectores vuelven al valor predeterminado (sin alterar el resultado aplicado); el botón **"Limpiar filtros"** restablece buscador, selectores, filtro y selección sin recargar la página.
+- **Responsive**: en móvil la tabla muestra solo las columnas esenciales (checkbox, ID, `lot_code`, estado), el buscador ocupa el ancho disponible y los botones de crear/limpiar son iconos (`add.svg`, `clean.svg`); los selectores y el botón Aplicar (icono `arrow.svg` rotado) se mantienen en una fila a su ancho natural.
 
 ---
 
