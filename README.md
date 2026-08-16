@@ -12,7 +12,7 @@ Sistema de gestión modular para la granja avícola **"El Campesino"**. Administ
 |---|---|---|---|
 | **Autenticación (usuarios + JWT)** | `app/api/v1/auth.py` | `LoginPage` + `AuthContext` | Implementado (login funcional) |
 | **Inventario de Aves (lotes)** | `app/api/v1/lots.py` | `LotsPage` (ruta `/lotes`) | Implementado (listado, buscar, filtrar, crear, editar, avanzar semana, evaluar, resumen, descartar) |
-| **Producción Diaria (huevos)** | `app/api/v1/production.py` | Ruta `/produccion` | Backend listo; frontend pendiente |
+| **Producción Diaria (huevos)** | `app/api/v1/production.py` | `ProductionPage` (ruta `/produccion`) | Implementado (selector de lote, indicadores, gráfico por rango, registro de postura con merge de coincidencias) |
 | **Alimentación** | `app/api/v1/feeding.py` | Ruta `/alimentacion` | Backend listo; frontend pendiente |
 | **Sanidad** (vacunas, enfermedades, mortalidad) | `app/api/v1/health.py` | Ruta `/sanidad` | Backend listo; frontend pendiente |
 | **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | Ruta `/trazabilidad` | Backend listo; frontend pendiente |
@@ -107,9 +107,9 @@ npm run lint
 
 ---
 
-## Prueba de conexión frontend ↔ backend (login + dashboard + lotes)
+## Prueba de conexión frontend ↔ backend (login + dashboard + lotes + producción)
 
-Con el backend y el frontend corriendo, la conexión entre ambos se valida con el login, el dashboard y el módulo de lotes:
+Con el backend y el frontend corriendo, la conexión entre ambos se valida con el login, el dashboard, el módulo de lotes y el de producción:
 
 1. **Crear el usuario admin inicial** con el script CLI:
 
@@ -126,9 +126,11 @@ Con el backend y el frontend corriendo, la conexión entre ambos se valida con e
 
 4. **Módulo de lotes** (`/lotes`): `LotsPage` lista los lotes y permite buscarlos por ID o `lot_code`, filtrarlos por estado y ejecutar acciones (crear, editar, avanzar semana, evaluar, resumen y descartar) contra la API real. Nota: las llamadas de colección usan la barra final (`/lots/`) para evitar el redirect 307 de FastAPI, que hacía perder el header de autorización.
 
-5. **Sesión persistente**: el `AuthContext` restaura la sesión al recargar la página validando el token con `/auth/me`. Si el token falta o es inválido, `ProtectedRoute` redirige a `/login`.
+5. **Módulo de producción** (`/produccion`): `ProductionPage` selecciona un lote, muestra sus indicadores (total, promedio semanal, porcentaje de postura y producción del día), visualiza la producción por rango de fechas (línea acumulada por hora en un solo día, barras por día en rangos largos) y registra recolecciones con fecha y hora. Si un registro coincide en fecha y hora con uno existente, la API responde `409` y el modal ofrece **sumar las cantidades** (`?merge=true`).
 
-6. **Verificación del proxy**: la petición sale por `http://localhost:5173/api/...` (Vite la reenvía a `http://localhost:8000/api/...`), lo que se puede confirmar con las herramientas de desarrollador del navegador (red) o ejecutando:
+6. **Sesión persistente**: el `AuthContext` restaura la sesión al recargar la página validando el token con `/auth/me`. Si el token falta o es inválido, `ProtectedRoute` redirige a `/login`.
+
+7. **Verificación del proxy**: la petición sale por `http://localhost:5173/api/...` (Vite la reenvía a `http://localhost:8000/api/...`), lo que se puede confirmar con las herramientas de desarrollador del navegador (red) o ejecutando:
 
    ```powershell
    curl.exe -X POST http://localhost:5173/api/v1/auth/login -H "Content-Type: application/json" -d '{"username":"juan","password":"MiClave123"}'
@@ -193,7 +195,7 @@ backend/
 └── pytest.ini
 ```
 
-La lógica de dominio de lotes se adaptó del **ejercicio en clase**: las clases `LoteGallinas`, `RegistroPosturas`, `RegistroAlimentacion`, `RegistroVacuna`, `RegistroMortalidad` y `LoteService` fueron migradas a modelos ORM y servicios de FastAPI.
+La lógica de dominio de lotes se adaptó del **ejercicio en clase**: las clases `LoteGallinas`, `RegistroPosturas`, `RegistroAlimentacion`, `RegistroVacuna`, `RegistroMortalidad` y `LoteService` fueron migradas a modelos ORM y servicios de FastAPI. En el módulo de producción, `RegistroPosturas` quedó representado por `EggProduction`, que además de la fecha guarda la **hora de recolección** (`collection_time`).
 
 Cada acción que modifica datos (crear/actualizar/descartar/avanzar/evaluar un lote, registrar producción, alimentación, vacunas, mortalidad o enfermedades) genera un **registro de auditoría** con un hash SHA-256 encadenado, simulando blockchain para garantizar la integridad del historial.
 
@@ -216,11 +218,13 @@ frontend/
 │   ├── pages/                   # Vistas completas
 │   │   ├── LoginPage.jsx/css
 │   │   ├── DashboardPage.jsx/css
-│   │   └── LotsPage.jsx/css     # Módulo Inventario de Aves (lotes)
+│   │   ├── LotsPage.jsx/css     # Módulo Inventario de Aves (lotes)
+│   │   └── ProductionPage.jsx/css # Módulo Producción Diaria
 │   ├── services/                # Clientes HTTP por módulo
 │   │   ├── apiClient.js         # Axios con interceptor JWT (baseURL /api/v1)
 │   │   ├── authService.js
 │   │   ├── lotService.js        # CRUD + acciones de lotes
+│   │   ├── productionService.js # Producción diaria (registro, merge, indicadores)
 │   │   └── dashboardService.js  # Agregación de datos del dashboard
 │   ├── hooks/                   # Custom Hooks (useAuth)
 │   ├── contexts/                # AuthContext (login/logout/sesión)
@@ -237,7 +241,17 @@ frontend/
 - **Rutas protegidas**: `ProtectedRoute` redirige a `/login` si no hay sesión y muestra un spinner mientras se valida el token.
 - **Layout y sidebar**: `Layout` + `Sidebar` replican el diseño de referencia con colapso persistido en `localStorage` (escritorio) y drawer móvil; el menú de usuario (`avatar`) permite administrar la cuenta o cerrar sesión.
 - **UI propia**: los componentes `Modal` y `Toast` usan clases propias con prefijo `app-` para no colisionar con las clases de Bootstrap (p. ej. `.toast`, `.modal-header`, `.btn-primary`), que ocultaban las notificaciones.
-- **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`, `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas. El módulo **`/lotes`** está implementado; el resto de módulos son placeholders que se implementarán en fases siguientes.
+- **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`, `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas. Los módulos **`/lotes`** y **`/produccion`** están implementados; el resto de módulos son placeholders que se implementarán en fases siguientes.
+
+### Producción Diaria (frontend)
+
+`ProductionPage` (`/produccion`) consume los endpoints de producción a través de `productionService.js`:
+
+- **Selector de lote**: campo con autocompletado (`<datalist>`) que lista todos los lotes; al elegir uno se cargan sus datos e indicadores.
+- **Indicadores** (cards estilo dashboard): producción total del lote, promedio de postura semanal, porcentaje de postura del lote y producción actual del día. En móvil se muestran como carrusel horizontal.
+- **Gráfico por rango de fechas**: con filtro "Desde/Hasta" (por defecto hoy). Si el rango es de un solo día muestra una línea acumulada por hora de recolección (tooltip con hora, huevos previos, recolectados, total acumulado, no aptos y comentario); con 2+ días muestra barras por día (tooltip con primer/último registro, huevos, no aptos, porcentaje de postura y promedio del día).
+- **Registro de postura**: formulario con cantidad, no aptos/rotos, fecha y hora de recolección (por defecto actuales) y comentario. Valida que al menos una cantidad sea mayor a 0, fecha solo hoy/ayer y hora no futura. Si ya existe un registro con la misma fecha y hora, abre un modal que muestra el registro existente y ofrece **sumar las cantidades** (merge) previa confirmación.
+- **Responsive**: en móvil el orden es título → selector → cards → formulario → gráfico.
 
 ### Inventario de Aves (frontend)
 
@@ -282,7 +296,7 @@ Todas las rutas usan el prefijo `/api/v1`. Todos los endpoints, excepto `login`,
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/api/v1/lots/{id}/production` | Registros de producción (`?from=&to=` por fecha) |
-| `POST` | `/api/v1/lots/{id}/production` | Registrar producción diaria |
+| `POST` | `/api/v1/lots/{id}/production` | Registrar producción diaria (fecha y hora de recolección). Si ya existe un registro con la misma fecha+hora devuelve `409` con el registro existente; usar `?merge=true` para sumar las cantidades |
 | `GET` | `/api/v1/lots/{id}/production/total` | Total de huevos del lote |
 | `GET` | `/api/v1/lots/{id}/production/average` | Promedio semanal de postura |
 | `GET` | `/api/v1/lots/{id}/production/percentage` | Porcentaje de postura |
@@ -383,11 +397,13 @@ Todas las rutas usan el prefijo `/api/v1`. Todos los endpoints, excepto `login`,
 ## Reglas de negocio implementadas (heredadas del ejercicio en clase)
 
 - Un lote inicia en la **semana 16** (semana de compra) y arranca la postura en la **semana 28**.
-- **Producción**: solo se registra si el lote está activo y en etapa de postura (semana ≥ 28).
+- **Producción**: solo se registra si el lote está activo y en etapa de postura (semana ≥ 28). Las cantidades (aptos y no aptos) deben ser ≥ 0 y al menos una mayor a 0; la fecha de recolección solo puede ser hoy o el día anterior, y la hora no puede ser futura. Varios registros del mismo día se permiten en horas distintas; si coinciden fecha y hora, las cantidades se suman al registro existente (merge).
 - **Alimentación**: solo se registra si el lote está activo.
 - **Vacunas**: solo se registran si el lote está activo.
 - **Mortalidad**: resta aves al lote, no puede exceder las aves actuales, y si el lote queda sin aves se desactiva con razón "Muerte de todas las gallinas".
 - **Evaluación** (semana 90): con porcentaje de postura < 80% el lote se descarta; con ≥ 80% se extienden 30 semanas.
+
+> **Nota (base de datos existente):** `Base.metadata.create_all` crea la columna `egg_production.collection_time` solo en bases nuevas. Si usas una BD creada antes de agregar la hora de recolección, ejecuta una vez: `ALTER TABLE egg_production ADD COLUMN collection_time TIME;`
 
 ## Reglas de IoT (rangos seguros para alertas)
 

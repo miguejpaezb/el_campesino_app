@@ -5,7 +5,7 @@ y `calcular_porcentaje_postura` del ejercicio en clase
 (`docs/ejercicio_en_clase/domain/lote.py`).
 """
 
-from datetime import date
+from datetime import date, datetime, time, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -32,26 +32,39 @@ class ProductionService:
         self.lot_service = LotService(db)
 
     def register_eggs(
-        self, lot_id: int, data: EggProductionCreate, user_id: int
+        self,
+        lot_id: int,
+        data: EggProductionCreate,
+        user_id: int,
+        merge: bool = False,
     ) -> EggProduction:
         """Registra la producción diaria de huevos de un lote.
 
         Aplica las reglas de negocio del ejercicio en clase:
           - El lote debe existir y estar activo.
           - La semana actual del lote debe ser >= SEMANA_DE_POSTURA.
+          - La fecha de recolección no puede ser futura ni anterior a ayer.
+          - La hora de recolección no puede ser futura si la fecha es hoy.
+          - Si ya existe un registro con la misma fecha y hora, el registro
+            se modifica sumando las cantidades (merge) siempre que `merge`
+            sea True; en caso contrario se devuelve HTTP 409.
 
         Args:
             lot_id: Identificador del lote.
             data: Datos validados del registro.
             user_id: Usuario que ejecuta la acción.
+            merge: Si True, suma cantidades a un registro existente con la
+                misma fecha y hora.
 
         Returns:
-            El registro de producción creado.
+            El registro de producción creado o actualizado.
 
         Raises:
             HTTPException 404: Si el lote no existe.
-            HTTPException 400: Si el lote está inactivo o aún no está en
-                etapa de postura.
+            HTTPException 400: Si el lote está inactivo, aún no está en
+                etapa de postura o la fecha/hora no es válida.
+            HTTPException 409: Si ya existe un registro con la misma fecha y
+                hora y `merge` es False.
         """
         lot = self.lot_service.get_lot(lot_id)
 
@@ -70,10 +83,42 @@ class ProductionService:
                 ),
             )
 
+        collection_date = data.collection_date or date.today()
+        collection_time = data.collection_time or datetime.now().time()
+        self._validate_datetime(collection_date, collection_time)
+
+        existing = self.repository.get_by_datetime(
+            lot.id, collection_date, collection_time
+        )
+        if existing is not None:
+            if not merge:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={
+                        "message": (
+                            "Ya existe un registro con esta fecha y hora. "
+                            "Confirma para sumar las cantidades al registro."
+                        ),
+                        "existing": EggProductionCreate(
+                            week=existing.week,
+                            collection_date=existing.collection_date,
+                            collection_time=existing.collection_time,
+                            egg_count=existing.egg_count,
+                            avg_weight_grams=existing.avg_weight_grams,
+                            broken_eggs=existing.broken_eggs,
+                            observations=existing.observations,
+                        ).model_dump(mode="json"),
+                    },
+                )
+            return self._merge_record(
+                lot, existing, data, user_id, collection_date, collection_time
+            )
+
         production = EggProduction(
             lot_id=lot.id,
             week=data.week if data.week is not None else lot.current_week,
-            collection_date=data.collection_date or date.today(),
+            collection_date=collection_date,
+            collection_time=collection_time,
             egg_count=data.egg_count,
             avg_weight_grams=data.avg_weight_grams,
             broken_eggs=data.broken_eggs,
@@ -88,10 +133,111 @@ class ProductionService:
             changes={
                 "lot_id": production.lot_id,
                 "week": production.week,
+                "collection_date": production.collection_date.isoformat(),
+                "collection_time": (
+                    production.collection_time.isoformat()
+                    if production.collection_time
+                    else None
+                ),
                 "egg_count": production.egg_count,
+                "broken_eggs": production.broken_eggs,
             },
         )
         return production
+
+    def _validate_datetime(
+        self, collection_date: date, collection_time: time
+    ) -> None:
+        """Valida que la fecha y hora de recolección sean permitidas.
+
+        La fecha solo puede ser hoy o el día anterior; la hora no puede ser
+        futura si la fecha es hoy.
+
+        Args:
+            collection_date: Fecha de recolección.
+            collection_time: Hora de recolección.
+
+        Raises:
+            HTTPException 400: Si la fecha/hora no es válida.
+        """
+        today = date.today()
+        yesterday = today - timedelta(days=1)
+
+        if collection_date > today:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La fecha de recolección no puede ser futura",
+            )
+        if collection_date < yesterday:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "La fecha de recolección no puede ser anterior al día "
+                    "anterior"
+                ),
+            )
+        if collection_date == today and collection_time > datetime.now().time():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La hora de recolección no puede ser futura",
+            )
+
+    def _merge_record(
+        self,
+        lot: object,
+        existing: EggProduction,
+        data: EggProductionCreate,
+        user_id: int,
+        collection_date: date,
+        collection_time: time,
+    ) -> EggProduction:
+        """Suma las cantidades de un registro a uno existente.
+
+        Args:
+            lot: Lote propietario del registro.
+            existing: Registro existente a modificar.
+            data: Datos validados del nuevo registro.
+            user_id: Usuario que ejecuta la acción.
+            collection_date: Fecha de recolección del registro.
+            collection_time: Hora de recolección del registro.
+
+        Returns:
+            El registro actualizado.
+        """
+        previous = {
+            "egg_count": existing.egg_count,
+            "broken_eggs": existing.broken_eggs,
+        }
+        existing.egg_count += data.egg_count
+        existing.broken_eggs += data.broken_eggs
+        if data.observations:
+            existing.observations = (
+                f"{existing.observations} | {data.observations}"
+                if existing.observations
+                else data.observations
+            )
+        existing = self.repository.update(existing)
+        TraceabilityService(self.db).log_event(
+            "EggProduction",
+            existing.id,
+            "UPDATE",
+            user_id,
+            changes={
+                "lot_id": existing.lot_id,
+                "collection_date": collection_date.isoformat(),
+                "collection_time": collection_time.isoformat(),
+                "previous": previous,
+                "added": {
+                    "egg_count": data.egg_count,
+                    "broken_eggs": data.broken_eggs,
+                },
+                "current": {
+                    "egg_count": existing.egg_count,
+                    "broken_eggs": existing.broken_eggs,
+                },
+            },
+        )
+        return existing
 
     def get_production_by_lot(
         self,

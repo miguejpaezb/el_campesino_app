@@ -5,6 +5,10 @@ Cubre el registro de producción, las consultas por fechas, los indicadores
 (escenario diferido de la Fase 2).
 """
 
+from datetime import date, datetime, timedelta
+
+import pytest
+
 from app.core.constants import CicloProductivo
 
 LOT_PAYLOAD = {
@@ -12,6 +16,15 @@ LOT_PAYLOAD = {
     "breed": "Ross 308",
     "initial_quantity": 1000,
 }
+
+
+def _yesterday_iso():
+    """Devuelve la fecha de ayer en formato ISO.
+
+    Returns:
+        Fecha de ayer como cadena `AAAA-MM-DD`.
+    """
+    return (date.today() - timedelta(days=1)).isoformat()
 
 
 def _create_lot(client, auth_headers):
@@ -158,20 +171,24 @@ def test_list_production_filtered_by_date(client, auth_headers):
     """El filtro por fechas debe limitar los registros devueltos.
 
     Escenario:
-        - Se registra producción el 10-01-2026 y el 10-02-2026.
-        - Filtrando desde febrero solo debe aparecer el segundo registro.
+        - Se registra producción ayer y hoy.
+        - Filtrando desde hoy solo debe aparecer el registro de hoy.
     """
     lot = _create_lot(client, auth_headers)
     _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
     _register_eggs(
-        client, auth_headers, lot["id"], 100, collection_date="2026-01-10"
+        client, auth_headers, lot["id"], 100, collection_date=_yesterday_iso()
     )
     _register_eggs(
-        client, auth_headers, lot["id"], 200, collection_date="2026-02-10"
+        client,
+        auth_headers,
+        lot["id"],
+        200,
+        collection_date=date.today().isoformat(),
     )
 
     response = client.get(
-        f"/api/v1/lots/{lot['id']}/production?from=2026-02-01",
+        f"/api/v1/lots/{lot['id']}/production?from={date.today().isoformat()}",
         headers=auth_headers,
     )
     assert response.status_code == 200
@@ -285,3 +302,197 @@ def test_summary_includes_eggs_after_production(client, auth_headers):
     body = response.json()
     assert body["total_eggs"] == 200
     assert body["average_weekly_production"] == 100.0
+
+
+def test_register_production_with_both_zero_returns_422(client, auth_headers):
+    """Aptos y no aptos en 0 debe ser rechazado.
+
+    Escenario:
+        - Se envía egg_count=0 y broken_eggs=0.
+        - La validación debe devolver HTTP 422.
+    """
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    response = _register_eggs(
+        client, auth_headers, lot["id"], 0, broken_eggs=0
+    )
+    assert response.status_code == 422
+
+
+def test_register_production_with_only_broken_returns_201(client, auth_headers):
+    """Solo huevos no aptos debe ser un registro válido.
+
+    Escenario:
+        - egg_count=0 y broken_eggs=5.
+        - La validación debe aceptarlo y devolver HTTP 201.
+    """
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    response = _register_eggs(
+        client, auth_headers, lot["id"], 0, broken_eggs=5
+    )
+    assert response.status_code == 201
+    assert response.json()["broken_eggs"] == 5
+
+
+def test_register_production_future_date_returns_400(client, auth_headers):
+    """Una fecha de recolección futura debe ser rechazada.
+
+    Escenario:
+        - Se envía collection_date = 9999-01-01.
+        - El servicio debe devolver HTTP 400.
+    """
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    response = _register_eggs(
+        client, auth_headers, lot["id"], 100, collection_date="9999-01-01"
+    )
+    assert response.status_code == 400
+    assert "futura" in response.json()["detail"]
+
+
+def test_register_production_old_date_returns_400(client, auth_headers):
+    """Una fecha anterior al día previo debe ser rechazada.
+
+    Escenario:
+        - Se envía collection_date = 2000-01-01.
+        - El servicio debe devolver HTTP 400.
+    """
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    response = _register_eggs(
+        client, auth_headers, lot["id"], 100, collection_date="2000-01-01"
+    )
+    assert response.status_code == 400
+    assert "anterior" in response.json()["detail"]
+
+
+def test_register_production_future_time_returns_400(client, auth_headers):
+    """Una hora futura (con fecha de hoy) debe ser rechazada.
+
+    Escenario:
+        - Se envía collection_date = hoy y una hora posterior a la actual.
+        - El servicio debe devolver HTTP 400.
+    """
+    now = datetime.now()
+    future = now + timedelta(minutes=5)
+    if future.date() != now.date():
+        pytest.skip("Demasiado cerca de la medianoche para probar hora futura")
+    future_time = future.time().strftime("%H:%M:%S")
+
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    response = _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        100,
+        collection_time=future_time,
+    )
+    assert response.status_code == 400
+    assert "hora" in response.json()["detail"]
+
+
+def test_multiple_records_same_day_returns_201(client, auth_headers):
+    """Varios registros el mismo día en horas distintas deben guardarse.
+
+    Escenario:
+        - Se registran huevos a las 06:00 y a las 07:00 de ayer.
+        - Ambos registros deben existir y sumar 300.
+    """
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        100,
+        collection_date=_yesterday_iso(),
+        collection_time="06:00:00",
+    )
+    _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        200,
+        collection_date=_yesterday_iso(),
+        collection_time="07:00:00",
+    )
+
+    response = client.get(
+        f"/api/v1/lots/{lot['id']}/production/total", headers=auth_headers
+    )
+    assert response.json()["total_eggs"] == 300
+
+
+def test_duplicate_datetime_returns_409(client, auth_headers):
+    """Un registro con la misma fecha y hora debe devolver HTTP 409.
+
+    Escenario:
+        - Se registran 100 huevos ayer a las 06:00.
+        - Se intenta registrar 50 huevos a la misma fecha y hora.
+        - La API debe responder 409 con el registro existente.
+    """
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    first = _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        100,
+        collection_date=_yesterday_iso(),
+        collection_time="06:00:00",
+    )
+    assert first.status_code == 201
+
+    response = _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        50,
+        collection_date=_yesterday_iso(),
+        collection_time="06:00:00",
+    )
+    assert response.status_code == 409
+    body = response.json()
+    assert body["detail"]["existing"]["egg_count"] == 100
+
+
+def test_merge_sums_quantities(client, auth_headers):
+    """Con merge=true las cantidades deben sumarse al registro existente.
+
+    Escenario:
+        - Se registran 100 huevos ayer a las 06:00.
+        - Se suma con merge=true otros 50 huevos y 5 no aptos.
+        - El registro debe quedar con 150 aptos y 5 no aptos.
+    """
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        100,
+        collection_date=_yesterday_iso(),
+        collection_time="06:00:00",
+    )
+
+    response = client.post(
+        f"/api/v1/lots/{lot['id']}/production?merge=true",
+        json={
+            "egg_count": 50,
+            "broken_eggs": 5,
+            "collection_date": _yesterday_iso(),
+            "collection_time": "06:00:00",
+        },
+        headers=auth_headers,
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["egg_count"] == 150
+    assert body["broken_eggs"] == 5
+
+    total = client.get(
+        f"/api/v1/lots/{lot['id']}/production/total", headers=auth_headers
+    )
+    assert total.json()["total_eggs"] == 150

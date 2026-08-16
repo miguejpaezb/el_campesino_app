@@ -12,6 +12,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import LotsPage from './pages/LotsPage.jsx'
+import ProductionPage from './pages/ProductionPage.jsx'
 
 function App() {
   return (
@@ -62,7 +63,7 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <PageHeader eyebrow="Producción Diaria" title="En construcción" />
+              <ProductionPage />
             </Layout>
           </ProtectedRoute>
         }

@@ -52,10 +52,15 @@ def list_production(
     response_model=EggProductionOut,
     status_code=status.HTTP_201_CREATED,
     summary="Registrar producción diaria",
+    description="Registra la producción diaria de huevos de un lote. Si ya "
+    "existe un registro con la misma fecha y hora devuelve HTTP 409 con el "
+    "registro existente; usa `?merge=true` para sumar las cantidades al "
+    "registro existente.",
 )
 def register_production(
     lot_id: int,
     payload: EggProductionCreate,
+    merge: bool = Query(default=False),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> EggProductionOut:
@@ -64,18 +69,23 @@ def register_production(
     Args:
         lot_id: Identificador del lote.
         payload: Datos del registro de producción.
+        merge: Si True, suma cantidades al registro existente con la misma
+            fecha y hora.
         db: Sesión de base de datos inyectada por FastAPI.
         current_user: Usuario autenticado.
 
     Returns:
-        El registro de producción creado.
+        El registro de producción creado o actualizado.
 
     Raises:
         HTTPException 404: Si el lote no existe.
-        HTTPException 400: Si el lote está inactivo o no está en postura.
+        HTTPException 400: Si el lote está inactivo, no está en postura o la
+            fecha/hora no es válida.
+        HTTPException 409: Si ya existe un registro con la misma fecha y hora
+            y `merge` es False.
     """
     service = ProductionService(db)
-    production = service.register_eggs(lot_id, payload, current_user.id)
+    production = service.register_eggs(lot_id, payload, current_user.id, merge)
     return EggProductionOut.model_validate(production)
 
 

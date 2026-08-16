@@ -4,7 +4,7 @@ Encapsula las consultas a la tabla `egg_production` mediante SQLAlchemy,
 abstrayendo a la capa de servicios de los detalles de persistencia.
 """
 
-from datetime import date
+from datetime import date, time
 
 from sqlalchemy.orm import Session
 
@@ -53,3 +53,39 @@ class ProductionRepository:
         self.db.commit()
         self.db.refresh(production)
         return production
+
+    def update(self, production: EggProduction) -> EggProduction:
+        """Persiste los cambios de un registro de producción.
+
+        Args:
+            production: Instancia de `EggProduction` modificada.
+
+        Returns:
+            El registro actualizado.
+        """
+        self.db.commit()
+        self.db.refresh(production)
+        return production
+
+    def get_by_datetime(
+        self, lot_id: int, collection_date: date, collection_time: time | None
+    ) -> EggProduction | None:
+        """Busca un registro de producción por fecha y hora de recolección.
+
+        Args:
+            lot_id: Identificador del lote.
+            collection_date: Fecha de recolección.
+            collection_time: Hora de recolección.
+
+        Returns:
+            El registro coincidente o None si no existe.
+        """
+        query = self.db.query(EggProduction).filter(
+            EggProduction.lot_id == lot_id,
+            EggProduction.collection_date == collection_date,
+        )
+        if collection_time is None:
+            query = query.filter(EggProduction.collection_time.is_(None))
+        else:
+            query = query.filter(EggProduction.collection_time == collection_time)
+        return query.first()

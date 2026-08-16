@@ -4,10 +4,10 @@ Adapta `RegistroPosturas` del ejercicio en clase
 (`docs/ejercicio_en_clase/domain/lote.py`) a SQLAlchemy 2.0.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String, func
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String, Time, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -24,6 +24,7 @@ class EggProduction(Base):
         lot_id: Identificador del lote al que pertenece.
         week: Semana del ciclo en la que se registró (antes semana).
         collection_date: Fecha de recolección de los huevos.
+        collection_time: Hora de recolección de los huevos.
         egg_count: Cantidad de huevos recolectados (antes cantidad_huevos).
         avg_weight_grams: Peso promedio por huevo en gramos.
         broken_eggs: Cantidad de huevos rotos en la recolección.
@@ -38,6 +39,7 @@ class EggProduction(Base):
     lot_id: Mapped[int] = mapped_column(ForeignKey("bird_lots.id"), index=True)
     week: Mapped[int] = mapped_column(Integer, nullable=False)
     collection_date: Mapped[date] = mapped_column(Date, default=date.today)
+    collection_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     egg_count: Mapped[int] = mapped_column(Integer, nullable=False)
     avg_weight_grams: Mapped[float | None] = mapped_column(Float, nullable=True)
     broken_eggs: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
