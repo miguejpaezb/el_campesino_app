@@ -217,16 +217,24 @@ def test_total_eggs_returns_sum(client, auth_headers):
 
 
 def test_average_weekly_production(client, auth_headers):
-    """El promedio semanal debe ser total / número de registros.
+    """El promedio semanal debe ser total / número de días productivos.
 
     Escenario:
-        - Se registran 100 y 200 huevos.
-        - El promedio debe ser 150.0.
+        - Se registran 100 huevos ayer y 200 hoy.
+        - El promedio debe ser 150.0 (300 / 2 días).
     """
     lot = _create_lot(client, auth_headers)
     _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
-    _register_eggs(client, auth_headers, lot["id"], 100)
-    _register_eggs(client, auth_headers, lot["id"], 200)
+    _register_eggs(
+        client, auth_headers, lot["id"], 100, collection_date=_yesterday_iso()
+    )
+    _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        200,
+        collection_date=date.today().isoformat(),
+    )
 
     response = client.get(
         f"/api/v1/lots/{lot['id']}/production/average", headers=auth_headers
@@ -235,17 +243,93 @@ def test_average_weekly_production(client, auth_headers):
     assert response.json()["average_weekly_production"] == 150.0
 
 
+def test_average_counts_same_day_as_single_day(client, auth_headers):
+    """Varios registros el mismo día deben contar como un solo día productivo.
+
+    Escenario:
+        - Se registran 100 y 200 huevos ayer en horas distintas.
+        - El promedio debe ser 300.0 (300 / 1 día).
+    """
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        100,
+        collection_date=_yesterday_iso(),
+        collection_time="06:00:00",
+    )
+    _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        200,
+        collection_date=_yesterday_iso(),
+        collection_time="07:00:00",
+    )
+
+    response = client.get(
+        f"/api/v1/lots/{lot['id']}/production/average", headers=auth_headers
+    )
+    assert response.status_code == 200
+    assert response.json()["average_weekly_production"] == 300.0
+
+
 def test_laying_percentage(client, auth_headers):
     """El porcentaje de postura debe calcularse contra el máximo teórico.
 
     Escenario:
-        - Lote de 1000 aves con 2 registros de 500 huevos cada uno.
-        - Máximo teórico = 1000 x 7 x 2 = 14000, porcentaje = 1000/14000 = 7.14%.
+        - Lote de 1000 aves con 2 registros de 500 huevos el mismo día.
+        - Días productivos = 1, máximo teórico = 1000 x 7 = 7000,
+          porcentaje = 1000/7000 = 14.29%.
     """
     lot = _create_lot(client, auth_headers)
     _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
-    _register_eggs(client, auth_headers, lot["id"], 500)
-    _register_eggs(client, auth_headers, lot["id"], 500)
+    _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        500,
+        collection_date=_yesterday_iso(),
+        collection_time="06:00:00",
+    )
+    _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        500,
+        collection_date=_yesterday_iso(),
+        collection_time="07:00:00",
+    )
+
+    response = client.get(
+        f"/api/v1/lots/{lot['id']}/production/percentage", headers=auth_headers
+    )
+    assert response.status_code == 200
+    assert response.json()["laying_percentage"] == 14.29
+
+
+def test_laying_percentage_with_two_days(client, auth_headers):
+    """El porcentaje debe usar los días con recolección, no los registros.
+
+    Escenario:
+        - Lote de 1000 aves con 500 huevos ayer y 500 hoy.
+        - Días productivos = 2, máximo teórico = 1000 x 7 x 2 = 14000,
+          porcentaje = 1000/14000 = 7.14%.
+    """
+    lot = _create_lot(client, auth_headers)
+    _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
+    _register_eggs(
+        client, auth_headers, lot["id"], 500, collection_date=_yesterday_iso()
+    )
+    _register_eggs(
+        client,
+        auth_headers,
+        lot["id"],
+        500,
+        collection_date=date.today().isoformat(),
+    )
 
     response = client.get(
         f"/api/v1/lots/{lot['id']}/production/percentage", headers=auth_headers
@@ -287,8 +371,9 @@ def test_summary_includes_eggs_after_production(client, auth_headers):
     """El resumen debe reflejar la producción registrada.
 
     Escenario:
-        - Lote en postura con 2 registros de 100 huevos.
-        - El resumen debe mostrar total_eggs=200 y promedio=100.0.
+        - Lote en postura con 2 registros de 100 huevos el mismo día.
+        - El resumen debe mostrar total_eggs=200 y promedio=200.0
+          (200 / 1 día productivo).
     """
     lot = _create_lot(client, auth_headers)
     _advance_to(client, auth_headers, lot["id"], CicloProductivo.SEMANA_DE_POSTURA)
@@ -301,7 +386,7 @@ def test_summary_includes_eggs_after_production(client, auth_headers):
     assert response.status_code == 200
     body = response.json()
     assert body["total_eggs"] == 200
-    assert body["average_weekly_production"] == 100.0
+    assert body["average_weekly_production"] == 200.0
 
 
 def test_register_production_with_both_zero_returns_422(client, auth_headers):

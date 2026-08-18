@@ -297,11 +297,11 @@ class LotService:
         total_mortality = sum(m.quantity for m in mortalities)
         total_feed = sum(f.kilos for f in feedings)
 
-        productive_weeks = len(productions)
+        productive_days = len({p.collection_date for p in productions})
         average_weekly = (
-            round(total_eggs / productive_weeks, 2) if productive_weeks else 0
+            round(total_eggs / productive_days, 2) if productive_days else 0
         )
-        max_eggs = lot.initial_quantity * 7 * productive_weeks
+        max_eggs = lot.initial_quantity * 7 * productive_days
         laying_percentage = (
             round((total_eggs / max_eggs) * 100, 2) if max_eggs else 0.0
         )
@@ -340,7 +340,9 @@ class LotService:
 
         Equivale a `calcular_porcentaje_postura` del ejercicio: relación entre
         los huevos recolectados y el máximo teórico (aves iniciales x 7 días
-        por semana productiva).
+        por semana productiva). Los días productivos se cuentan por fecha de
+        recolección distinta, de modo que varios registros del mismo día no
+        inflan el denominador.
 
         Args:
             lot: Instancia del lote a evaluar.
@@ -349,13 +351,13 @@ class LotService:
             Porcentaje de postura redondeado a 2 decimales.
         """
         productions = getattr(lot, "egg_productions", None) or []
-        productive_weeks = len(productions)
+        productive_days = len({p.collection_date for p in productions})
 
-        if not productive_weeks:
+        if not productive_days:
             return 0.0
 
         total_eggs = sum(p.egg_count for p in productions)
-        max_eggs = lot.initial_quantity * 7 * productive_weeks
+        max_eggs = lot.initial_quantity * 7 * productive_days
         if max_eggs == 0:
             return 0.0
 

@@ -282,13 +282,16 @@ class ProductionService:
     def get_avg_weekly_production(self, lot_id: int) -> float:
         """Calcula el promedio de postura semanal de un lote.
 
-        Equivale a `calcular_promedio_postura_semanal()` del ejercicio.
+        Equivale a `calcular_promedio_postura_semanal()` del ejercicio. El
+        promedio se calcula sobre la suma total de huevos dividida entre los
+        días con recolección, de modo que varios registros del mismo día
+        cuentan como un solo día productivo.
 
         Args:
             lot_id: Identificador del lote.
 
         Returns:
-            Promedio de huevos por semana registrada.
+            Promedio de huevos por día con recolección.
 
         Raises:
             HTTPException 404: Si el lote no existe.
@@ -299,8 +302,12 @@ class ProductionService:
         if not productions:
             return 0.0
 
+        productive_days = len({p.collection_date for p in productions})
+        if not productive_days:
+            return 0.0
+
         total = sum(p.egg_count for p in productions)
-        return round(total / len(productions), 2)
+        return round(total / productive_days, 2)
 
     def get_laying_percentage(self, lot_id: int) -> float:
         """Calcula el porcentaje de postura de un lote.
