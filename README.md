@@ -12,12 +12,12 @@ Sistema de gestión modular para la granja avícola **"El Campesino"**. Administ
 |---|---|---|---|
 | **Autenticación (usuarios + JWT)** | `app/api/v1/auth.py` | `LoginPage` + `AuthContext` | Implementado (login funcional) |
 | **Inventario de Aves (lotes)** | `app/api/v1/lots.py` | `LotsPage` (ruta `/lotes`) | Implementado (listado, buscar, filtrar, crear, editar, avanzar semana, evaluar, resumen, descartar) |
-| **Producción Diaria (huevos)** | `app/api/v1/production.py` | `ProductionPage` (ruta `/produccion`) | Implementado (selector de lote, indicadores, gráfico por rango, registro de postura con merge de coincidencias) |
+| **Producción Diaria (huevos)** | `app/api/v1/production.py` | `ProductionPage` (ruta `/produccion`) | Implementado (autocompletado de lote, indicadores por día productivo, gráfico por rango, registro de postura con merge de coincidencias) |
 | **Alimentación** | `app/api/v1/feeding.py` | Ruta `/alimentacion` | Backend listo; frontend pendiente |
 | **Sanidad** (vacunas, enfermedades, mortalidad) | `app/api/v1/health.py` | Ruta `/sanidad` | Backend listo; frontend pendiente |
 | **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | Ruta `/trazabilidad` | Backend listo; frontend pendiente |
 | **Monitoreo IoT** | `app/api/v1/iot.py` | Ruta `/iot` | Backend listo; frontend pendiente |
-| **Frontend base** (layout, sidebar, dashboard) | — | `components/`, `pages/`, `contexts/`, `services/` | Implementado (sidebar responsive, menú de usuario y dashboard con datos del backend) |
+| **Frontend base** (layout, sidebar, dashboard) | — | `components/`, `pages/`, `contexts/`, `services/` | Implementado (sidebar responsive, menú de usuario y dashboard con datos del backend y gráfico semanal con detalles por día) |
 | **Pruebas + documentación** | — | — | Parcial |
 
 ---
@@ -122,11 +122,11 @@ Con el backend y el frontend corriendo, la conexión entre ambos se valida con e
 
 2. **Iniciar sesión** en <http://localhost:5173/login>: la `LoginPage` llama a `POST /api/v1/auth/login`, guarda el `access_token` en `localStorage` y obtiene el usuario con `GET /api/v1/auth/me`.
 
-3. **Dashboard**: al autenticarse se redirige a `/`, donde `DashboardPage` muestra las tarjetas de producción (producción hoy, lotes activos, tasa de postura y mortalidad), el gráfico semanal de huevos, el resumen de la semana y el historial de acciones. El contador de **lotes activos** se obtiene del backend con `GET /api/v1/lots/?active=true`.
+3. **Dashboard**: al autenticarse se redirige a `/`, donde `DashboardPage` muestra las tarjetas de producción (producción hoy, lotes activos, tasa de postura y mortalidad), el gráfico semanal de huevos con detalles por día (huevos, no aptos, postura, promedio y lotes con registro al pasar el cursor), el resumen de la semana y el historial de acciones. El contador de **lotes activos** se obtiene del backend con `GET /api/v1/lots/?active=true`.
 
 4. **Módulo de lotes** (`/lotes`): `LotsPage` lista los lotes y permite buscarlos por ID o `lot_code`, filtrarlos por estado y ejecutar acciones (crear, editar, avanzar semana, evaluar, resumen y descartar) contra la API real. Nota: las llamadas de colección usan la barra final (`/lots/`) para evitar el redirect 307 de FastAPI, que hacía perder el header de autorización.
 
-5. **Módulo de producción** (`/produccion`): `ProductionPage` selecciona un lote, muestra sus indicadores (total, promedio semanal, porcentaje de postura y producción del día), visualiza la producción por rango de fechas (línea acumulada por hora en un solo día, barras por día en rangos largos) y registra recolecciones con fecha y hora. Si un registro coincide en fecha y hora con uno existente, la API responde `409` y el modal ofrece **sumar las cantidades** (`?merge=true`).
+5. **Módulo de producción** (`/produccion`): `ProductionPage` permite buscar el lote con autocompletado por coincidencia parcial, muestra sus indicadores (total, promedio semanal, porcentaje de postura y producción del día), visualiza la producción por rango de fechas (línea acumulada por hora en un solo día, barras por día en rangos largos) y registra recolecciones con fecha y hora. Si un registro coincide en fecha y hora con uno existente, la API responde `409` y el modal ofrece **sumar las cantidades** (`?merge=true`).
 
 6. **Sesión persistente**: el `AuthContext` restaura la sesión al recargar la página validando el token con `/auth/me`. Si el token falta o es inválido, `ProtectedRoute` redirige a `/login`.
 
@@ -247,11 +247,17 @@ frontend/
 
 `ProductionPage` (`/produccion`) consume los endpoints de producción a través de `productionService.js`:
 
-- **Selector de lote**: campo con autocompletado (`<datalist>`) que lista todos los lotes; al elegir uno se cargan sus datos e indicadores.
-- **Indicadores** (cards estilo dashboard): producción total del lote, promedio de postura semanal, porcentaje de postura del lote y producción actual del día. En móvil se muestran como carrusel horizontal.
-- **Gráfico por rango de fechas**: con filtro "Desde/Hasta" (por defecto hoy). Si el rango es de un solo día muestra una línea acumulada por hora de recolección (tooltip con hora, huevos previos, recolectados, total acumulado, no aptos y comentario); con 2+ días muestra barras por día (tooltip con primer/último registro, huevos, no aptos, porcentaje de postura y promedio del día).
+- **Selector de lote**: campo con autocompletado propio que filtra por coincidencia parcial del código (p. ej. escribir "1" lista los lotes cuyo código lo contenga), con navegación por teclado (flechas + Enter + Escape). Al elegir un lote se cargan sus datos e indicadores; si el texto no corresponde a ningún lote existente, los datos del módulo quedan en blanco.
+- **Indicadores** (cards estilo dashboard): producción total del lote, promedio de postura semanal, porcentaje de postura del lote y producción actual del día. En móvil se muestran como carrusel horizontal. El promedio semanal y el porcentaje de postura se calculan sobre **días productivos** (fechas de recolección distintas), de modo que varios registros del mismo día no distorsionan los indicadores.
+- **Gráfico por rango de fechas**: con filtro "Desde/Hasta" (por defecto hoy). Si el rango es de un solo día muestra una línea acumulada por hora de recolección con interpolación cúbica (`cubicInterpolationMode: 'monotone'`) y tooltip por proximidad (hora, huevos previos, recolectados, total acumulado, no aptos y comentario); con 2+ días muestra barras por día (tooltip con primer/último registro, huevos, no aptos, porcentaje de postura y promedio del día).
 - **Registro de postura**: formulario con cantidad, no aptos/rotos, fecha y hora de recolección (por defecto actuales) y comentario. Valida que al menos una cantidad sea mayor a 0, fecha solo hoy/ayer y hora no futura. Si ya existe un registro con la misma fecha y hora, abre un modal que muestra el registro existente y ofrece **sumar las cantidades** (merge) previa confirmación.
 - **Responsive**: en móvil el orden es título → selector → cards → formulario → gráfico.
+
+### Dashboard (frontend)
+
+`DashboardPage` (`/`) agrega la información de los lotes activos a través de `dashboardService.js`:
+
+- **Gráfico "Huevos por día"**: barras de los últimos 7 días con tooltip por día que muestra los huevos recolectados, no aptos, porcentaje de postura del día, promedio por lote y cantidad de lotes con registro ese día.
 
 ### Inventario de Aves (frontend)
 
@@ -298,7 +304,7 @@ Todas las rutas usan el prefijo `/api/v1`. Todos los endpoints, excepto `login`,
 | `GET` | `/api/v1/lots/{id}/production` | Registros de producción (`?from=&to=` por fecha) |
 | `POST` | `/api/v1/lots/{id}/production` | Registrar producción diaria (fecha y hora de recolección). Si ya existe un registro con la misma fecha+hora devuelve `409` con el registro existente; usar `?merge=true` para sumar las cantidades |
 | `GET` | `/api/v1/lots/{id}/production/total` | Total de huevos del lote |
-| `GET` | `/api/v1/lots/{id}/production/average` | Promedio semanal de postura |
+| `GET` | `/api/v1/lots/{id}/production/average` | Promedio de postura por día productivo |
 | `GET` | `/api/v1/lots/{id}/production/percentage` | Porcentaje de postura |
 
 ### Alimentación
@@ -397,7 +403,7 @@ Todas las rutas usan el prefijo `/api/v1`. Todos los endpoints, excepto `login`,
 ## Reglas de negocio implementadas (heredadas del ejercicio en clase)
 
 - Un lote inicia en la **semana 16** (semana de compra) y arranca la postura en la **semana 28**.
-- **Producción**: solo se registra si el lote está activo y en etapa de postura (semana ≥ 28). Las cantidades (aptos y no aptos) deben ser ≥ 0 y al menos una mayor a 0; la fecha de recolección solo puede ser hoy o el día anterior, y la hora no puede ser futura. Varios registros del mismo día se permiten en horas distintas; si coinciden fecha y hora, las cantidades se suman al registro existente (merge).
+- **Producción**: solo se registra si el lote está activo y en etapa de postura (semana ≥ 28). Las cantidades (aptos y no aptos) deben ser ≥ 0 y al menos una mayor a 0; la fecha de recolección solo puede ser hoy o el día anterior, y la hora no puede ser futura. Varios registros del mismo día se permiten en horas distintas; si coinciden fecha y hora, las cantidades se suman al registro existente (merge). El promedio semanal y el porcentaje de postura se calculan agrupando por fecha de recolección distinta (**días productivos**), por lo que varios registros del mismo día cuentan como un solo día productivo y no distorsionan las métricas.
 - **Alimentación**: solo se registra si el lote está activo.
 - **Vacunas**: solo se registran si el lote está activo.
 - **Mortalidad**: resta aves al lote, no puede exceder las aves actuales, y si el lote queda sin aves se desactiva con razón "Muerte de todas las gallinas".
