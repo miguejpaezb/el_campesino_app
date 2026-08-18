@@ -1,0 +1,65 @@
+.app-row-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: rgba(158, 107, 52, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.app-row-menu-btn:hover,
+.app-row-menu-btn[aria-expanded='true'] {
+  background: rgba(158, 107, 52, 0.22);
+}
+
+.app-row-menu-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+.app-row-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid rgba(88, 88, 88, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(67, 67, 67, 0.18);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-row-menu-item {
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2f2f2f;
+  cursor: pointer;
+}
+
+.app-row-menu-item:hover {
+  background: rgba(158, 107, 52, 0.1);
+}
+
+.app-row-menu-item.is-danger {
+  color: #c0392b;
+}
+
+.app-row-menu-item.is-danger:hover {
+  background: rgba(192, 57, 43, 0.1);
+}
+
+.app-row-menu-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
