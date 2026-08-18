@@ -13,7 +13,7 @@ Sistema de gestión modular para la granja avícola **"El Campesino"**. Administ
 | **Autenticación (usuarios + JWT)** | `app/api/v1/auth.py` | `LoginPage` + `AuthContext` | Implementado (login funcional) |
 | **Inventario de Aves (lotes)** | `app/api/v1/lots.py` | `LotsPage` (ruta `/lotes`) | Implementado (listado, buscar, filtrar, crear, editar, avanzar semana, evaluar, resumen, descartar) |
 | **Producción Diaria (huevos)** | `app/api/v1/production.py` | `ProductionPage` (ruta `/produccion`) | Implementado (autocompletado de lote, indicadores por día productivo, gráfico por rango, registro de postura con merge de coincidencias) |
-| **Alimentación** | `app/api/v1/feeding.py` | Ruta `/alimentacion` | Backend listo; frontend pendiente |
+| **Alimentación** | `app/api/v1/feeding.py` + `app/api/v1/feed_stock.py` | `FeedingPage` (`/alimentacion`), `FeedStockPage` (`/alimentacion/insumos`) y `FeedingSummaryPage` (`/alimentacion/resumen/:lotId`) | Implementado (inventario de alimentos con stock y precios, registro por lote con descuento de stock, resumen con gráfico por semanas e historial paginado) |
 | **Sanidad** (vacunas, enfermedades, mortalidad) | `app/api/v1/health.py` | Ruta `/sanidad` | Backend listo; frontend pendiente |
 | **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | Ruta `/trazabilidad` | Backend listo; frontend pendiente |
 | **Monitoreo IoT** | `app/api/v1/iot.py` | Ruta `/iot` | Backend listo; frontend pendiente |
@@ -107,9 +107,9 @@ npm run lint
 
 ---
 
-## Prueba de conexión frontend ↔ backend (login + dashboard + lotes + producción)
+## Prueba de conexión frontend ↔ backend (login + dashboard + lotes + producción + alimentación)
 
-Con el backend y el frontend corriendo, la conexión entre ambos se valida con el login, el dashboard, el módulo de lotes y el de producción:
+Con el backend y el frontend corriendo, la conexión entre ambos se valida con el login, el dashboard, el módulo de lotes, el de producción y el de alimentación:
 
 1. **Crear el usuario admin inicial** con el script CLI:
 
@@ -128,9 +128,11 @@ Con el backend y el frontend corriendo, la conexión entre ambos se valida con e
 
 5. **Módulo de producción** (`/produccion`): `ProductionPage` permite buscar el lote con autocompletado por coincidencia parcial, muestra sus indicadores (total, promedio semanal, porcentaje de postura y producción del día), visualiza la producción por rango de fechas (línea acumulada por hora en un solo día, barras por día en rangos largos) y registra recolecciones con fecha y hora. Si un registro coincide en fecha y hora con uno existente, la API responde `409` y el modal ofrece **sumar las cantidades** (`?merge=true`).
 
-6. **Sesión persistente**: el `AuthContext` restaura la sesión al recargar la página validando el token con `/auth/me`. Si el token falta o es inválido, `ProtectedRoute` redirige a `/login`.
+6. **Módulo de alimentación** (`/alimentacion`): `FeedingPage` muestra la tabla de lotes y el botón **"Gestión de alimento"** que abre el inventario (`/alimentacion/insumos`). Allí se agregan alimentos (`POST /api/v1/feed-stock`) con stock, costo por kilo y stock mínimo; el menú de cada fila permite añadir stock, suspender o eliminar. De vuelta en `/alimentacion`, el menú de un lote → **Registrar alimentación** abre el modal con autocompletado de alimento (valida stock y muestra el valor del suministro) y guarda con `POST /api/v1/lots/{id}/feeding`. La opción **Ver resumen de alimentación** navega a `/alimentacion/resumen/:lotId`, con cards, gráfico por semanas, resumen del lapso e historial paginado.
 
-7. **Verificación del proxy**: la petición sale por `http://localhost:5173/api/...` (Vite la reenvía a `http://localhost:8000/api/...`), lo que se puede confirmar con las herramientas de desarrollador del navegador (red) o ejecutando:
+7. **Sesión persistente**: el `AuthContext` restaura la sesión al recargar la página validando el token con `/auth/me`. Si el token falta o es inválido, `ProtectedRoute` redirige a `/login`.
+
+8. **Verificación del proxy**: la petición sale por `http://localhost:5173/api/...` (Vite la reenvía a `http://localhost:8000/api/...`), lo que se puede confirmar con las herramientas de desarrollador del navegador (red) o ejecutando:
 
    ```powershell
    curl.exe -X POST http://localhost:5173/api/v1/auth/login -H "Content-Type: application/json" -d '{"username":"juan","password":"MiClave123"}'
@@ -165,8 +167,9 @@ backend/
 │   │       ├── auth.py           # Autenticación
 │   │       ├── lots.py           # Inventario de aves
 │   │       ├── production.py     # Producción diaria de huevos
-│   │       ├── feeding.py        # Alimentación
-│   │       ├── health.py         # Sanidad (vacunas, mortalidad, enfermedades)
+│   │   ├── feeding.py        # Alimentación
+│   │   ├── feed_stock.py     # Inventario de alimentos (insumos)
+│   │   ├── health.py         # Sanidad (vacunas, mortalidad, enfermedades)
 │   │       ├── traceability.py   # Trazabilidad (blockchain simulado)
 │   │       └── iot.py            # Monitoreo IoT
 │   ├── core/                     # Configuración, seguridad y constantes
@@ -179,6 +182,7 @@ backend/
 │   │   ├── bird_lot.py
 │   │   ├── egg_production.py
 │   │   ├── feeding.py
+│   │   ├── feed_stock.py         # Tipos de alimento + movimientos de stock
 │   │   ├── vaccination.py
 │   │   ├── mortality.py
 │   │   ├── disease.py
@@ -213,18 +217,24 @@ frontend/
 │   │   ├── PageHeader.jsx       # Encabezado reutilizable (eyebrow + título)
 │   │   ├── Modal.jsx            # Modal reutilizable (overlay, tecla Escape, footer)
 │   │   ├── Toast.jsx            # Notificaciones toast (éxito/error/info)
+│   │   ├── RowMenu.jsx/css      # Menú desplegable por fila (submenú)
 │   │   ├── ProtectedRoute.jsx   # Guard de rutas autenticadas
 │   │   └── ErrorBoundary.jsx
 │   ├── pages/                   # Vistas completas
 │   │   ├── LoginPage.jsx/css
 │   │   ├── DashboardPage.jsx/css
 │   │   ├── LotsPage.jsx/css     # Módulo Inventario de Aves (lotes)
-│   │   └── ProductionPage.jsx/css # Módulo Producción Diaria
+│   │   ├── ProductionPage.jsx/css # Módulo Producción Diaria
+│   │   ├── FeedingPage.jsx/css  # Módulo Alimentación (tabla de lotes)
+│   │   ├── FeedStockPage.jsx/css # Inventario de alimentos (insumos)
+│   │   └── FeedingSummaryPage.jsx/css # Resumen de alimentación por lote
 │   ├── services/                # Clientes HTTP por módulo
 │   │   ├── apiClient.js         # Axios con interceptor JWT (baseURL /api/v1)
 │   │   ├── authService.js
 │   │   ├── lotService.js        # CRUD + acciones de lotes
 │   │   ├── productionService.js # Producción diaria (registro, merge, indicadores)
+│   │   ├── feedingService.js    # Alimentación (registro, total kg, costo)
+│   │   ├── feedStockService.js  # Inventario de alimentos (CRUD + stock)
 │   │   └── dashboardService.js  # Agregación de datos del dashboard
 │   ├── hooks/                   # Custom Hooks (useAuth)
 │   ├── contexts/                # AuthContext (login/logout/sesión)
@@ -241,7 +251,7 @@ frontend/
 - **Rutas protegidas**: `ProtectedRoute` redirige a `/login` si no hay sesión y muestra un spinner mientras se valida el token.
 - **Layout y sidebar**: `Layout` + `Sidebar` replican el diseño de referencia con colapso persistido en `localStorage` (escritorio) y drawer móvil; el menú de usuario (`avatar`) permite administrar la cuenta o cerrar sesión.
 - **UI propia**: los componentes `Modal` y `Toast` usan clases propias con prefijo `app-` para no colisionar con las clases de Bootstrap (p. ej. `.toast`, `.modal-header`, `.btn-primary`), que ocultaban las notificaciones.
-- **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`, `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas. Los módulos **`/lotes`** y **`/produccion`** están implementados; el resto de módulos son placeholders que se implementarán en fases siguientes.
+- **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`, `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas. Los módulos **`/lotes`**, **`/produccion`** y **`/alimentacion`** (incluye `/alimentacion/insumos` y `/alimentacion/resumen/:lotId`) están implementados; el resto de módulos son placeholders que se implementarán en fases siguientes.
 
 ### Producción Diaria (frontend)
 
@@ -268,6 +278,15 @@ frontend/
 - **Acciones por lote** (selector + botón "Aplicar"): editar (modal "Editando &lt;código&gt;" con raza y observaciones), avanzar semana (permite uno o varios lotes), evaluar (toast si aún no es la semana 90, modal con el resultado en caso contrario), resumen (modal con los indicadores productivos) y descartar (modal que pide la razón, cuenta regresiva de 5 s con barra decreciente y opción de cancelar).
 - **Reglas de validación**: no se combinan acción + filtro a la vez; las acciones individuales exigen exactamente un lote; tras ejecutar una acción los selectores vuelven al valor predeterminado (sin alterar el resultado aplicado); el botón **"Limpiar filtros"** restablece buscador, selectores, filtro y selección sin recargar la página.
 - **Responsive**: en móvil la tabla muestra solo las columnas esenciales (checkbox, ID, `lot_code`, estado), el buscador ocupa el ancho disponible y los botones de crear/limpiar son iconos (`add.svg`, `clean.svg`); los selectores y el botón Aplicar (icono `arrow.svg` rotado) se mantienen en una fila a su ancho natural.
+
+### Alimentación (frontend)
+
+El módulo se divide en tres pantallas: `FeedingPage` (`/alimentacion`), `FeedStockPage` (`/alimentacion/insumos`) y `FeedingSummaryPage` (`/alimentacion/resumen/:lotId`). Consumen `feedingService.js` y `feedStockService.js`:
+
+- **Inventario de alimentos** (`FeedStockPage`): buscador por nombre, botón "Agregar alimento" y tabla con nombre, stock actual (con badge "Stock bajo" si `stock_kg ≤ min_stock_kg`), costo por kilo y fecha de la última actualización. Cada fila tiene un menú (`submenu.svg`) con: **Editar** (nombre y stock mínimo), **Añadir stock** (kilos y la opción "¿costó lo mismo que la última vez?" o "cambió el precio", con fecha del ingreso), **Suspender/Activar** y **Eliminar** (desvincula el historial conservando el nombre en los registros).
+- **Registro por lote** (`FeedingPage`): buscador + tabla de lotes (ID, código/raza, aves, semana, estado). En la cabecera, el botón **"Gestión de alimento"** abre el inventario. Cada lote tiene un menú con **Registrar alimentación** (modal con autocompletado del alimento del inventario —solo activos— que muestra stock actual, costo por kilo y estado, más kilos, fecha, semana precargada y observaciones; el valor del suministro se calcula con el precio del inventario) y **Ver resumen de alimentación**.
+- **Resumen por lote** (`FeedingSummaryPage`): cards de total consumido, costo total, registros y último suministro (carrusel en móvil); gráfico de barras "Kilos de alimento por día" con la ventana fija de los **últimos 7 días** y tooltip por día; panel de resumen del lapso (total, costo, registros, promedio por día y tipo más usado) y tabla del historial **paginada a 10 registros** por página (fecha, semana, tipo, kilos y costo total). El botón **Volver** usa el icono `arrow.svg` con fondo amarillo.
+- **Responsive**: en móvil las tablas conservan solo las columnas esenciales (en `FeedingPage`: ID, lote y menú; en `FeedStockPage`: alimento, última actualización y menú, sin el badge de estado), las cards se muestran como carrusel y el orden de los paneles prioriza el resumen.
 
 ---
 
@@ -312,9 +331,21 @@ Todas las rutas usan el prefijo `/api/v1`. Todos los endpoints, excepto `login`,
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/api/v1/lots/{id}/feeding` | Registros de alimentación del lote |
-| `POST` | `/api/v1/lots/{id}/feeding` | Registrar alimentación |
+| `POST` | `/api/v1/lots/{id}/feeding` | Registrar alimentación (`feed_type_id` opcional: toma el precio del inventario y descuenta stock) |
 | `GET` | `/api/v1/lots/{id}/feeding/total` | Total de kilos consumidos |
 | `GET` | `/api/v1/lots/{id}/feeding/cost` | Costo total de alimentación |
+
+### Inventario de Alimentos (insumos)
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/api/v1/feed-stock` | Listar tipos de alimento (`?search=` por nombre) |
+| `POST` | `/api/v1/feed-stock` | Crear un alimento (stock inicial y costo) |
+| `PUT` | `/api/v1/feed-stock/{id}` | Editar nombre y stock mínimo |
+| `POST` | `/api/v1/feed-stock/{id}/stock` | Añadir stock (`price_option: same` conserva el precio, `new` lo cambia) |
+| `POST` | `/api/v1/feed-stock/{id}/suspend` | Suspender o reactivar un alimento |
+| `DELETE` | `/api/v1/feed-stock/{id}` | Eliminar un alimento (el historial conserva el nombre) |
+| `GET` | `/api/v1/feed-stock/{id}/movements` | Movimientos de ingreso de stock del alimento |
 
 ### Sanidad
 
@@ -404,12 +435,13 @@ Todas las rutas usan el prefijo `/api/v1`. Todos los endpoints, excepto `login`,
 
 - Un lote inicia en la **semana 16** (semana de compra) y arranca la postura en la **semana 28**.
 - **Producción**: solo se registra si el lote está activo y en etapa de postura (semana ≥ 28). Las cantidades (aptos y no aptos) deben ser ≥ 0 y al menos una mayor a 0; la fecha de recolección solo puede ser hoy o el día anterior, y la hora no puede ser futura. Varios registros del mismo día se permiten en horas distintas; si coinciden fecha y hora, las cantidades se suman al registro existente (merge). El promedio semanal y el porcentaje de postura se calculan agrupando por fecha de recolección distinta (**días productivos**), por lo que varios registros del mismo día cuentan como un solo día productivo y no distorsionan las métricas.
-- **Alimentación**: solo se registra si el lote está activo.
+- **Alimentación**: solo se registra si el lote está activo. Si el registro usa `feed_type_id` (inventario), el alimento debe existir, estar activo (no suspendido) y tener **stock suficiente**; el stock se **descuenta** al registrar y el costo se toma del precio del inventario (el valor monetario del registro es `kilos × costo por kilo`). El tipo de alimento queda guardado como snapshot del nombre.
+- **Inventario de alimentos**: cada tipo de alimento tiene un stock en kilos, un costo por kilo y un **stock mínimo** para notificar "Stock bajo" (`stock ≤ mínimo`). Al **añadir stock** se indica si el kilo costó lo mismo que la última vez o si cambió el precio. Un alimento **suspendido** no puede usarse para registrar alimentación. Al **eliminar** un alimento, los registros históricos conservan el nombre del producto (`feed_type_id` queda nulo) para mantener la trazabilidad del historial.
 - **Vacunas**: solo se registran si el lote está activo.
 - **Mortalidad**: resta aves al lote, no puede exceder las aves actuales, y si el lote queda sin aves se desactiva con razón "Muerte de todas las gallinas".
 - **Evaluación** (semana 90): con porcentaje de postura < 80% el lote se descarta; con ≥ 80% se extienden 30 semanas.
 
-> **Nota (base de datos existente):** `Base.metadata.create_all` crea la columna `egg_production.collection_time` solo en bases nuevas. Si usas una BD creada antes de agregar la hora de recolección, ejecuta una vez: `ALTER TABLE egg_production ADD COLUMN collection_time TIME;`
+> **Nota (base de datos existente):** al iniciar el backend en SQLite se aplican automáticamente migraciones ligeras (`_run_lightweight_migrations` en `app/main.py`) que agregan la columna `feeding_records.feed_type_id` a bases ya creadas y crean las tablas nuevas (`feed_types`, `feed_stock_movements`). Las columnas agregadas con anterioridad (p. ej. `egg_production.collection_time`) requieren `ALTER TABLE egg_production ADD COLUMN collection_time TIME;` la primera vez.
 
 ## Reglas de IoT (rangos seguros para alertas)
 
