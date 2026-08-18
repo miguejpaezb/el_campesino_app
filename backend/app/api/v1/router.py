@@ -7,6 +7,7 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     auth,
+    feed_stock,
     feeding,
     health,
     iot,
@@ -22,6 +23,7 @@ api_router.include_router(system.router, tags=["system"])
 api_router.include_router(lots.router, prefix="/lots", tags=["lots"])
 api_router.include_router(production.router, prefix="/lots", tags=["production"])
 api_router.include_router(feeding.router, prefix="/lots", tags=["feeding"])
+api_router.include_router(feed_stock.router, prefix="/feed-stock", tags=["feed-stock"])
 api_router.include_router(health.router, prefix="/lots", tags=["health"])
 api_router.include_router(
     traceability.router, prefix="/traceability", tags=["traceability"]

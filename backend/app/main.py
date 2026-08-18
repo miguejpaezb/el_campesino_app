@@ -10,12 +10,36 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect, text
 
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import Base, engine
 
 STATIC_DIR = Path(__file__).parent / "static"
+
+
+def _run_lightweight_migrations() -> None:
+    """Aplica migraciones ligeras a bases SQLite existentes.
+
+    `create_all` solo crea tablas nuevas; las columnas agregadas a tablas
+    existentes se añaden aquí mediante `ALTER TABLE`.
+    """
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+
+    if "feeding_records" in tables:
+        columns = {
+            column["name"] for column in inspector.get_columns("feeding_records")
+        }
+        if "feed_type_id" not in columns:
+            with engine.begin() as connection:
+                connection.execute(
+                    text(
+                        "ALTER TABLE feeding_records "
+                        "ADD COLUMN feed_type_id INTEGER"
+                    )
+                )
 
 
 def create_app() -> FastAPI:
@@ -33,6 +57,7 @@ def create_app() -> FastAPI:
 
     if settings.DATABASE_URL.startswith("sqlite"):
         Base.metadata.create_all(bind=engine)
+        _run_lightweight_migrations()
 
     app.add_middleware(
         CORSMiddleware,

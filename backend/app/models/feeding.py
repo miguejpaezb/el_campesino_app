@@ -14,6 +14,7 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models.bird_lot import BirdLot
+    from app.models.feed_stock import FeedType
 
 
 class FeedingRecord(Base):
@@ -22,20 +23,27 @@ class FeedingRecord(Base):
     Attributes:
         id: Identificador único del registro.
         lot_id: Identificador del lote al que pertenece.
+        feed_type_id: Identificador del tipo de alimento del inventario
+            (si el registro proviene del inventario; se anula al eliminar
+            el alimento).
         week: Semana del ciclo en la que se registró (antes semana).
         feed_date: Fecha del suministro de alimento.
-        feed_type: Tipo de alimento suministrado.
+        feed_type: Nombre del alimento suministrado (snapshot del nombre).
         kilos: Cantidad de alimento en kilos (antes kilos).
         cost_per_kilo: Costo por kilo del alimento.
         observations: Observaciones del registro.
         created_at: Fecha de creación del registro.
         lot: Relación con el lote propietario.
+        feed_type_rel: Relación con el tipo de alimento del inventario.
     """
 
     __tablename__ = "feeding_records"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     lot_id: Mapped[int] = mapped_column(ForeignKey("bird_lots.id"), index=True)
+    feed_type_id: Mapped[int | None] = mapped_column(
+        ForeignKey("feed_types.id"), nullable=True, index=True
+    )
     week: Mapped[int] = mapped_column(Integer, nullable=False)
     feed_date: Mapped[date] = mapped_column(Date, default=date.today)
     feed_type: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -45,6 +53,9 @@ class FeedingRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
     lot: Mapped["BirdLot"] = relationship(back_populates="feeding_records")
+    feed_type_rel: Mapped["FeedType | None"] = relationship(
+        back_populates="feeding_records"
+    )
 
     @property
     def total_cost(self) -> float | None:
