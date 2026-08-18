@@ -2,8 +2,16 @@
 
 > **Proyecto académico** — Evidencia de aprendizaje para el Tecnólogo en **Análisis y Desarrollo de Software (ADSO)**, Ficha **3134556**.
 
-Sistema de gestión modular para la granja avícola **"El Campesino"**. Administra lotes de aves, alimentación, sanidad, producción diaria de huevos, trazabilidad y monitoreo IoT.
+![Python](https://img.shields.io/badge/-Python-3776AB?style=flat&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/-FastAPI-009688?style=flat&logo=fastapi&logoColor=white) ![React](https://img.shields.io/badge/-React-61DAFB?style=flat&logo=react&logoColor=black) ![SQLite](https://img.shields.io/badge/-SQLite-003B57?style=flat&logo=sqlite&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white) ![JWT](https://img.shields.io/badge/-JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)
 
+Sistema de gestión modular full-stack para la granja avícola **"El Campesino"**. Administra lotes de aves, alimentación, sanidad, producción diaria de huevos, trazabilidad (hash encadenado tipo blockchain) y monitoreo IoT en tiempo real.
+
+**Highlights técnicos:**
+- 🔐 Autenticación JWT con roles (admin/usuario)
+- 🏗️ Arquitectura en capas (API → Servicios → Repositorios → ORM)
+- 📊 Dashboards con gráficos interactivos y datos en tiempo real
+- ⛓️ Trazabilidad con hash SHA-256 encadenado (auditoría inmutable)
+- ✅ Testing con Pytest + linting (Ruff, ESLint)
 ---
 
 ## Estado del proyecto
