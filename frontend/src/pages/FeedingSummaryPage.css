@@ -1,0 +1,154 @@
+.feedingsummary-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.feedingsummary-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.feedingsummary-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #f6cb46;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(246, 203, 70, 0.35);
+}
+
+.feedingsummary-back-btn:hover {
+  background: #e6b93a;
+}
+
+.feedingsummary-back-btn img {
+  width: 22px;
+  height: 22px;
+  filter: brightness(0);
+}
+
+.feedingsummary-lot-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.feedingsummary-lot-week {
+  color: #7a7a7a;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.feedingsummary-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.feedingsummary-chart-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.feedingsummary-chart-panel .panel-header {
+  flex-shrink: 0;
+}
+
+.feedingsummary-chart {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 260px;
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(158, 107, 52, 0.04),
+    rgba(158, 107, 52, 0)
+  );
+  padding: 10px;
+}
+
+#feedingSummaryChart {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.feedingsummary-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 14px 4px 4px;
+}
+
+.feedingsummary-pagination span {
+  color: #7a7a7a;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+  .feedingsummary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .feedingsummary-shell {
+    gap: 18px;
+  }
+
+  .feedingsummary-header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .feedingsummary-back-btn {
+    align-self: flex-end;
+  }
+
+  .feedingsummary-grid {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .feedingsummary-summary-panel {
+    order: -1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .feedingsummary-chart-panel {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .feedingsummary-chart {
+    flex: none;
+    height: 220px;
+    min-height: 220px;
+  }
+
+  #feedingSummaryChart {
+    height: 220px !important;
+  }
+
+  .feedingsummary-pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}

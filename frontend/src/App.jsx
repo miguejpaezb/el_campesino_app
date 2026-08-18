@@ -10,6 +10,9 @@ import Layout from './components/Layout.jsx'
 import PageHeader from './components/PageHeader.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
+import FeedStockPage from './pages/FeedStockPage.jsx'
+import FeedingPage from './pages/FeedingPage.jsx'
+import FeedingSummaryPage from './pages/FeedingSummaryPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import LotsPage from './pages/LotsPage.jsx'
 import ProductionPage from './pages/ProductionPage.jsx'
@@ -43,7 +46,27 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <PageHeader eyebrow="Alimentación" title="En construcción" />
+              <FeedingPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/alimentacion/insumos"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <FeedStockPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/alimentacion/resumen/:lotId"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <FeedingSummaryPage />
             </Layout>
           </ProtectedRoute>
         }
