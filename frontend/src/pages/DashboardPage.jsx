@@ -20,6 +20,10 @@ const EMPTY = {
   mortalityPercentage: 0,
   bestDay: null,
   daily: [],
+  dailyBroken: [],
+  dailyPercentage: [],
+  dailyAverage: [],
+  dailyLots: [],
   labels: [],
   dateRangeText: '',
   hasData: false,
@@ -54,6 +58,17 @@ function DashboardPage() {
   useEffect(() => {
     if (!canvasRef.current) return
 
+    const tooltipLines = (ctx) => {
+      const index = ctx.dataIndex
+      return [
+        `Huevos recolectados: ${data.daily[index]}`,
+        `No aptos: ${data.dailyBroken[index]}`,
+        `Postura del día: ${data.dailyPercentage[index].toFixed(1)}%`,
+        `Promedio por lote: ${data.dailyAverage[index].toFixed(1)}`,
+        `Lotes con registro: ${data.dailyLots[index]}`,
+      ]
+    }
+
     chartRef.current?.destroy()
     chartRef.current = new Chart(canvasRef.current, {
       type: 'bar',
@@ -74,12 +89,15 @@ function DashboardPage() {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
+        interaction: {
+          intersect: false,
+        },
         plugins: {
           legend: {
             display: false,
           },
           tooltip: {
-            enabled: false,
+            callbacks: { label: tooltipLines },
           },
         },
         scales: {

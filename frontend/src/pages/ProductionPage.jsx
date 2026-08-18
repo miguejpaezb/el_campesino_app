@@ -83,6 +83,8 @@ function ProductionPage() {
   const [lots, setLots] = useState([])
   const [lotInput, setLotInput] = useState('')
   const [selectedLot, setSelectedLot] = useState(null)
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const [loadingLots, setLoadingLots] = useState(true)
   const [metrics, setMetrics] = useState({
     total: 0,
@@ -216,11 +218,65 @@ function ProductionPage() {
     }
   }, [selectedLot, fromDate, toDate, fetchProductionData, pushToast])
 
+  const lotSuggestions = lots.filter((lot) =>
+    lot.lot_code.toLowerCase().includes(lotInput.trim().toLowerCase()),
+  )
+
+  const clearLotData = () => {
+    setSelectedLot(null)
+    setMetrics({ total: 0, average: 0, percentage: 0 })
+    setTodayEggs(0)
+    setRecords([])
+  }
+
+  const selectLot = (lot) => {
+    setLotInput(lot.lot_code)
+    setSelectedLot(lot)
+    setSuggestionsOpen(false)
+    setActiveIndex(-1)
+  }
+
   const handleLotInput = (event) => {
     const value = event.target.value
     setLotInput(value)
+    setActiveIndex(-1)
     const lot = lots.find((item) => item.lot_code === value)
-    if (lot) setSelectedLot(lot)
+    if (lot) {
+      setSelectedLot(lot)
+      setSuggestionsOpen(true)
+    } else {
+      clearLotData()
+    }
+  }
+
+  const handleLotFocus = () => {
+    setSuggestionsOpen(true)
+  }
+
+  const handleLotBlur = () => {
+    setTimeout(() => {
+      setSuggestionsOpen(false)
+      setActiveIndex(-1)
+    }, 120)
+  }
+
+  const handleLotKeyDown = (event) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setSuggestionsOpen(true)
+      setActiveIndex((prev) => Math.min(prev + 1, lotSuggestions.length - 1))
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActiveIndex((prev) => Math.max(prev - 1, -1))
+    } else if (event.key === 'Enter') {
+      if (suggestionsOpen && activeIndex >= 0 && lotSuggestions[activeIndex]) {
+        event.preventDefault()
+        selectLot(lotSuggestions[activeIndex])
+      }
+    } else if (event.key === 'Escape') {
+      setSuggestionsOpen(false)
+      setActiveIndex(-1)
+    }
   }
 
   const setField = (field, value) => {
@@ -459,9 +515,10 @@ function ProductionPage() {
             borderRadius: 8,
             borderSkipped: false,
             maxBarThickness: 32,
-            stepped: chartData.single ? 'after' : false,
-            tension: chartData.single ? 0 : 0.2,
-            fill: chartData.single,
+            stepped: false,
+            tension: chartData.single ? 0.4 : 0.2,
+            cubicInterpolationMode: chartData.single ? 'monotone' : undefined,
+            fill: false,
           },
         ],
       },
@@ -469,6 +526,9 @@ function ProductionPage() {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
+        interaction: {
+          intersect: false,
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -522,7 +582,7 @@ function ProductionPage() {
       {
         label: 'Promedio de postura semanal',
         value: metrics.average.toFixed(2),
-        sub: 'Huevos por registro',
+        sub: 'Huevos por día',
         icon: 'TRAZABILIDAD.svg',
         alt: 'Promedio semanal',
         theme: 'success',
@@ -564,21 +624,47 @@ function ProductionPage() {
         <PageHeader eyebrow="Producción Diaria" title="Registro de postura" />
         <div className="production-selector">
           <label htmlFor="production-lot-input">Lote</label>
-          <input
-            id="production-lot-input"
-            list="production-lots"
-            value={lotInput}
-            onChange={handleLotInput}
-            placeholder={loadingLots ? 'Cargando lotes...' : 'Buscar lote'}
-            autoComplete="off"
-          />
-          <datalist id="production-lots">
-            {lots.map((lot) => (
-              <option key={lot.id} value={lot.lot_code}>
-                {lot.breed}
-              </option>
-            ))}
-          </datalist>
+          <div className="production-lot-autocomplete">
+            <input
+              id="production-lot-input"
+              value={lotInput}
+              onChange={handleLotInput}
+              onFocus={handleLotFocus}
+              onBlur={handleLotBlur}
+              onKeyDown={handleLotKeyDown}
+              placeholder={loadingLots ? 'Cargando lotes...' : 'Buscar lote'}
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={suggestionsOpen}
+              aria-haspopup="listbox"
+            />
+            {suggestionsOpen && lotSuggestions.length > 0 && (
+              <ul className="production-suggestions" role="listbox">
+                {lotSuggestions.map((lot, index) => (
+                  <li
+                    key={lot.id}
+                    role="option"
+                    aria-selected={index === activeIndex}
+                  >
+                    <button
+                      type="button"
+                      className={index === activeIndex ? 'is-active' : ''}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => selectLot(lot)}
+                    >
+                      <span className="production-suggestion-code">
+                        {lot.lot_code}
+                      </span>
+                      <span className="production-suggestion-meta">
+                        {lot.breed} · Semana {lot.current_week} ·{' '}
+                        {lot.current_quantity} aves
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <span className="production-date-chip">
             {formatShortDate(todayISO())}
           </span>

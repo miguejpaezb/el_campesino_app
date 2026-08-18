@@ -37,6 +37,10 @@ const emptyDashboard = (from, to) => ({
   mortalityPercentage: 0,
   bestDay: null,
   daily: [],
+  dailyBroken: [],
+  dailyPercentage: [],
+  dailyAverage: [],
+  dailyLots: [],
   labels: [],
   dateRangeText: `${formatShortDate(from)} - ${formatShortDate(to)}`,
   hasData: false,
@@ -99,22 +103,45 @@ export const dashboardService = {
     )
 
     const daily = []
+    const dailyBroken = []
+    const dailyLots = []
     const labels = []
     const cursor = new Date(from)
     while (cursor <= to) {
       const iso = toISODate(cursor)
       labels.push(DAY_NAMES[cursor.getDay()])
-      const total = perLot.reduce(
-        (acc, { production }) =>
-          acc +
-          production
-            .filter((record) => record.collection_date === iso)
-            .reduce((sum, record) => sum + record.egg_count, 0),
-        0,
-      )
-      daily.push(total)
+      let eggs = 0
+      let broken = 0
+      let lotsWithRecords = 0
+      for (const { production } of perLot) {
+        const dayRecords = production.filter(
+          (record) => record.collection_date === iso,
+        )
+        if (dayRecords.length) {
+          lotsWithRecords += 1
+          eggs += dayRecords.reduce((sum, record) => sum + record.egg_count, 0)
+          broken += dayRecords.reduce(
+            (sum, record) => sum + record.broken_eggs,
+            0,
+          )
+        }
+      }
+      daily.push(eggs)
+      dailyBroken.push(broken)
+      dailyLots.push(lotsWithRecords)
       cursor.setDate(cursor.getDate() + 1)
     }
+
+    const totalBirds = perLot.reduce(
+      (acc, { lot }) => acc + (lot.current_quantity || 0),
+      0,
+    )
+    const dailyPercentage = daily.map((eggs) =>
+      totalBirds > 0 ? (eggs / totalBirds) * 100 : 0,
+    )
+    const dailyAverage = daily.map((eggs, index) =>
+      dailyLots[index] ? eggs / dailyLots[index] : 0,
+    )
 
     const todayEggs = perLot.reduce(
       (acc, { production }) =>
@@ -152,6 +179,10 @@ export const dashboardService = {
       mortalityPercentage,
       bestDay,
       daily,
+      dailyBroken,
+      dailyPercentage,
+      dailyAverage,
+      dailyLots,
       labels,
       dateRangeText: `${formatShortDate(from)} - ${formatShortDate(to)}`,
       hasData: weekTotal > 0,

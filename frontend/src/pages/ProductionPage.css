@@ -50,6 +50,63 @@
   border-color: var(--color-brown);
 }
 
+.production-lot-autocomplete {
+  position: relative;
+}
+
+.production-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid rgba(88, 88, 88, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(67, 67, 67, 0.16);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.production-suggestions li {
+  margin: 0;
+  padding: 0;
+}
+
+.production-suggestions button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.production-suggestions button:hover,
+.production-suggestions button.is-active {
+  background: rgba(158, 107, 52, 0.1);
+}
+
+.production-suggestion-code {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #2f2f2f;
+}
+
+.production-suggestion-meta {
+  font-size: 0.75rem;
+  color: #7a7a7a;
+}
+
 .production-date-chip {
   background: rgba(158, 107, 52, 0.12);
   color: var(--color-brown);
@@ -200,9 +257,13 @@
     font-size: 0.62rem;
   }
 
+  .production-lot-autocomplete {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   .production-selector input {
-    flex: 1 1 90px;
-    width: auto;
+    width: 100%;
     min-width: 0;
     max-width: none;
     font-size: 0.85rem;
