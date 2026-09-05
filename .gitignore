@@ -68,3 +68,6 @@ coverage/
 *.rar
 *.7z
 *.gz
+
+# Elementos en espera
+android/
