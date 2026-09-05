@@ -16,6 +16,7 @@ import FeedingSummaryPage from './pages/FeedingSummaryPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import LotsPage from './pages/LotsPage.jsx'
 import ProductionPage from './pages/ProductionPage.jsx'
+import SanidadPage from './pages/SanidadPage.jsx'
 
 function App() {
   return (
@@ -76,7 +77,7 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <PageHeader eyebrow="Sanidad" title="En construcción" />
+              <SanidadPage />
             </Layout>
           </ProtectedRoute>
         }
