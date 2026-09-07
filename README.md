@@ -23,7 +23,7 @@ Sistema de gestión modular full-stack para la granja avícola **"El Campesino"*
 | **Producción Diaria (huevos)** | `app/api/v1/production.py` | `ProductionPage` (ruta `/produccion`) | Implementado (autocompletado de lote, indicadores por día productivo, gráfico por rango, registro de postura con merge de coincidencias) |
 | **Alimentación** | `app/api/v1/feeding.py` + `app/api/v1/feed_stock.py` | `FeedingPage` (`/alimentacion`), `FeedStockPage` (`/alimentacion/insumos`) y `FeedingSummaryPage` (`/alimentacion/resumen/:lotId`) | Implementado (inventario de alimentos con stock y precios, registro por lote con descuento de stock, resumen con gráfico por semanas e historial paginado) |
 | **Sanidad** (vacunas, enfermedades, mortalidad) | `app/api/v1/health.py` | `SanidadPage` (ruta `/sanidad`) | Implementado (panel por lote con autocompletado, tarjetas indicadoras y pestañas de vacunas, mortalidad y enfermedades) |
-| **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | Ruta `/trazabilidad` | Backend listo; frontend pendiente |
+| **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | `TraceabilityPage` (ruta `/trazabilidad`) | Implementado (explorador por tipo de entidad, cadena de bloques con hash encadenado y verificación de integridad) |
 | **Monitoreo IoT** | `app/api/v1/iot.py` | Ruta `/iot` | Backend listo; frontend pendiente |
 | **Frontend base** (layout, sidebar, dashboard) | — | `components/`, `pages/`, `contexts/`, `services/` | Implementado (sidebar responsive, menú de usuario y dashboard con datos del backend y gráfico semanal con detalles por día) |
 | **Pruebas + documentación** | — | — | Parcial |
@@ -239,6 +239,7 @@ frontend/
 │   │   ├── FeedStockPage.jsx/css # Inventario de alimentos (insumos)
 │   │   └── FeedingSummaryPage.jsx/css # Resumen de alimentación por lote
 │   │   ├── SanidadPage.jsx/css  # Módulo Sanidad (vacunas, mortalidad, enfermedades)
+│   │   └── TraceabilityPage.jsx/css # Módulo Trazabilidad (cadena de hash y verificación)
 │   ├── services/                # Clientes HTTP por módulo
 │   │   ├── apiClient.js         # Axios con interceptor JWT (baseURL /api/v1)
 │   │   ├── authService.js
@@ -247,6 +248,7 @@ frontend/
 │   │   ├── feedingService.js    # Alimentación (registro, total kg, costo)
 │   │   ├── feedStockService.js  # Inventario de alimentos (CRUD + stock)
 │   │   ├── sanidadService.js    # Sanidad (vacunas, mortalidad, enfermedades)
+│   │   ├── traceabilityService.js # Trazabilidad (historial y verificación de hash)
 │   │   └── dashboardService.js  # Agregación de datos del dashboard
 │   ├── hooks/                   # Custom Hooks (useAuth)
 │   ├── contexts/                # AuthContext (login/logout/sesión)
@@ -263,7 +265,7 @@ frontend/
 - **Rutas protegidas**: `ProtectedRoute` redirige a `/login` si no hay sesión y muestra un spinner mientras se valida el token.
 - **Layout y sidebar**: `Layout` + `Sidebar` replican el diseño de referencia con colapso persistido en `localStorage` (escritorio) y drawer móvil; el menú de usuario (`avatar`) permite administrar la cuenta o cerrar sesión.
 - **UI propia**: los componentes `Modal` y `Toast` usan clases propias con prefijo `app-` para no colisionar con las clases de Bootstrap (p. ej. `.toast`, `.modal-header`, `.btn-primary`), que ocultaban las notificaciones.
-- **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`, `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas. Los módulos **`/lotes`**, **`/produccion`**, **`/alimentacion`** (incluye `/alimentacion/insumos` y `/alimentacion/resumen/:lotId`) y **`/sanidad`** están implementados; el resto de módulos son placeholders que se implementarán en fases siguientes.
+- **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`, `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas. Los módulos **`/lotes`**, **`/produccion`**, **`/alimentacion`** (incluye `/alimentacion/insumos` y `/alimentacion/resumen/:lotId`), **`/sanidad`** y **`/trazabilidad`** están implementados; el resto de módulos (`/iot`, `/usuarios`, `/cuenta`) son placeholders que se implementarán en fases siguientes.
 
 ### Producción Diaria (frontend)
 
@@ -311,6 +313,17 @@ El módulo se divide en tres pantallas: `FeedingPage` (`/alimentacion`), `FeedSt
 - **Mortalidad**: el registro descuenta la cantidad de aves del lote y valida en el formulario que no exceda las aves actuales. Si el lote queda sin aves, el backend lo desactiva y la página lo refleja con un toast informativo y la actualización de las tarjetas (nuevo lote "Descartado").
 - **Enfermedades**: registro con fecha de diagnóstico, aves afectadas, síntomas y tratamiento. El menú de cada fila permite **editar el tratamiento** (modal con síntomas, tratamiento y fechas) o **marcar como resuelta** (con confirmación). En lotes inactivos solo se permite consultar el historial y registrar enfermedades.
 - **Responsive**: en móvil las tablas conservan solo las columnas esenciales, las tarjetas se muestran como carrusel y las pestañas se desplazan horizontalmente.
+
+### Trazabilidad (frontend)
+
+`TraceabilityPage` (`/trazabilidad`) consume `traceabilityService.js` (`GET /traceability/{entity_type}/{entity_id}` y `POST /traceability/verify/{entity_type}/{entity_id}`) y reutiliza los servicios de lotes, producción, alimentación, sanidad e insumos para poblar los selectores de entidades:
+
+- **Explorador por tipo de entidad** (píldoras): Lote (`BirdLot`), Producción (`EggProduction`), Alimentación (`FeedingRecord`), Vacuna (`Vaccination`), Mortalidad (`Mortality`), Enfermedad (`Disease`) e Insumo (`FeedType`).
+- **Selector contextual**: autocompletado de lote por coincidencia parcial del código con navegación por teclado (igual que en sanidad). Cuando el tipo de entidad pertenece a un lote se elige primero el lote y luego la instancia (registro de postura, suministro, vacuna, evento de mortalidad o enfermedad); en el caso de los insumos la lista sale del inventario. La primera entidad disponible se selecciona automáticamente.
+- **Resumen de la cadena**: tipo e identificador de la entidad (`BirdLot #3`, `EggProduction #12`...), etiqueta descriptiva (fechas, cantidades) y conteo de bloques. El botón **"Verificar integridad"** llama al endpoint de verificación y muestra el resultado.
+- **Banner de verificación**: verde con "Cadena íntegra · N registros" o rojo con "Alteración detectada en el bloque #N"; al detectarse una alteración se resalta el bloque señalado.
+- **Cadena de bloques**: lista cronológica de los eventos de auditoría; cada bloque es expandible y muestra la acción (badge `CREATE`/`UPDATE`/`DELETE`), fecha y hora, autor (`Usuario #id` y su nombre si el rol es admin), los cambios registrados (tabla campo → valor desde el JSON) y los hashes anterior/actual con botón **copiar**. La coincidencia del encadenamiento se valida por bloque (el primero se identifica como "Bloque génesis").
+- **Responsive**: en móvil los controles se apilan a lo ancho, las etiquetas largas se envuelven y los hashes se rompen en varias líneas.
 
 ---
 
