@@ -20,4 +20,9 @@ export const authService = {
     const { data } = await apiClient.get('/auth/me')
     return data
   },
+
+  async listUsers() {
+    const { data } = await apiClient.get('/auth/users')
+    return data
+  },
 }
