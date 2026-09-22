@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.miguelpaezdev.elcampesino.ui.screens.SectionScreen
+import com.miguelpaezdev.elcampesino.ui.screens.lots.LotsScreen
 
 private const val TRANSITION_DURATION = 300
 
@@ -36,7 +37,11 @@ fun AppNavHost(
     ) {
         Destinations.all.forEach { item ->
             composable(item.route) {
-                SectionScreen(eyebrow = item.eyebrow, title = item.title)
+                if (item.route == Destinations.Lotes) {
+                    LotsScreen()
+                } else {
+                    SectionScreen(eyebrow = item.eyebrow, title = item.title)
+                }
             }
         }
     }

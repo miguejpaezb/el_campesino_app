@@ -76,9 +76,11 @@ private fun AppRoot(session: SessionManager) {
 
         val token = session.getToken()
         if (token == null) {
+            RetrofitClient.authToken = null
             state = SessionState.LoggedOut
             return@LaunchedEffect
         }
+        RetrofitClient.authToken = token
 
         state = try {
             val user = RetrofitClient.unwrap(
@@ -87,6 +89,7 @@ private fun AppRoot(session: SessionManager) {
             SessionState.LoggedIn(user)
         } catch (e: ApiException) {
             if (e.statusCode == 401) {
+                RetrofitClient.authToken = null
                 session.clear()
                 SessionState.LoggedOut
             } else {
@@ -107,6 +110,7 @@ private fun AppRoot(session: SessionManager) {
 
         SessionState.LoggedOut -> LoginScreen(
             onLoggedIn = { token, user ->
+                RetrofitClient.authToken = token
                 scope.launch { session.save(token, user) }
                 state = SessionState.LoggedIn(user)
             },
@@ -116,6 +120,7 @@ private fun AppRoot(session: SessionManager) {
         is SessionState.LoggedIn -> AppShell(
             user = current.user,
             onLogout = {
+                RetrofitClient.authToken = null
                 scope.launch { session.clear() }
                 state = SessionState.LoggedOut
             },

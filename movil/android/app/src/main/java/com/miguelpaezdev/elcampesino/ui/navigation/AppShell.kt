@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -28,6 +29,8 @@ import androidx.navigation.compose.rememberNavController
 import com.miguelpaezdev.elcampesino.R
 import com.miguelpaezdev.elcampesino.data.dto.UserDto
 import com.miguelpaezdev.elcampesino.ui.components.AppDrawer
+import com.miguelpaezdev.elcampesino.ui.components.AppToastHost
+import com.miguelpaezdev.elcampesino.ui.components.ToastController
 import com.miguelpaezdev.elcampesino.ui.theme.BrandBrown
 import com.miguelpaezdev.elcampesino.ui.theme.InfoText
 import com.miguelpaezdev.elcampesino.ui.theme.MainGradientEnd
@@ -45,6 +48,7 @@ fun AppShell(
     val scope = rememberCoroutineScope()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val toasts by ToastController.toasts.collectAsState()
 
     ModalNavigationDrawer(
         modifier = modifier,
@@ -95,6 +99,15 @@ fun AppShell(
                         .padding(start = 13.dp, top = 13.dp),
                 )
             }
+
+            AppToastHost(
+                toasts = toasts,
+                onDismiss = ToastController::dismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(horizontal = 18.dp, vertical = 18.dp),
+            )
         }
     }
 }

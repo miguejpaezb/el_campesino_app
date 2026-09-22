@@ -14,10 +14,24 @@ object RetrofitClient {
 
     private const val BASE_URL = "https://elcampesino.gvs.lat/api/v1/"
 
+    @Volatile
+    var authToken: String? = null
+
     private val gson = Gson()
 
     private val okHttpClient: OkHttpClient by lazy {
         val builder = OkHttpClient.Builder()
+        builder.addInterceptor { chain ->
+            val token = authToken
+            val request = if (token.isNullOrEmpty()) {
+                chain.request()
+            } else {
+                chain.request().newBuilder()
+                    .header("Authorization", "Bearer $token")
+                    .build()
+            }
+            chain.proceed(request)
+        }
         if (BuildConfig.DEBUG) {
             val logging = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
