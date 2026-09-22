@@ -18,13 +18,13 @@ que busques.
 
 | Documento | Contenido |
 |---|---|
-| [Guía de inicio](./guia-de-inicio.md) | Requisitos, puesta en marcha (backend y frontend), creación del admin inicial, verificación de la conexión y calidad del código |
+| [Guía de inicio](./guia-de-inicio.md) | Requisitos, puesta en marcha (backend, frontend y app móvil), creación del admin inicial, verificación de la conexión y calidad del código |
 
 ## Arquitectura
 
 | Documento | Contenido |
 |---|---|
-| [Arquitectura](./arquitectura.md) | Arquitectura en capas del backend, árbol de carpetas (backend y frontend), decisiones técnicas y patrones del frontend |
+| [Arquitectura](./arquitectura.md) | Arquitectura en capas del backend, árbol de carpetas (backend, frontend y móvil), decisiones técnicas y patrones del frontend y la app Android |
 
 ## Referencia
 
@@ -34,6 +34,9 @@ que busques.
 | [API disponible](./api.md) | Referencia de todos los endpoints por módulo y ejemplo de uso rápido con Postman |
 
 ## Módulos
+
+> La app móvil (Android) por ahora solo cubre la **autenticación**; el resto de
+> módulos están implementados en la web.
 
 | Módulo | Ruta (frontend) | Documento |
 |---|---|---|
@@ -48,5 +51,5 @@ que busques.
 
 ## Estado del proyecto
 
-El resumen de lo implementado (backend/frontend) se mantiene en el
+El resumen de lo implementado (backend / frontend / móvil) se mantiene en el
 [README principal](../README.md).

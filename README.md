@@ -2,7 +2,7 @@
 
 > **Proyecto académico** — Evidencia de aprendizaje para el Tecnólogo en **Análisis y Desarrollo de Software (ADSO)**, Ficha **3134556**.
 
-![Python](https://img.shields.io/badge/-Python-3776AB?style=flat&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/-FastAPI-009688?style=flat&logo=fastapi&logoColor=white) ![React](https://img.shields.io/badge/-React-61DAFB?style=flat&logo=react&logoColor=black) ![SQLite](https://img.shields.io/badge/-SQLite-003B57?style=flat&logo=sqlite&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white) ![JWT](https://img.shields.io/badge/-JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)
+![Python](https://img.shields.io/badge/-Python-3776AB?style=flat&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/-FastAPI-009688?style=flat&logo=fastapi&logoColor=white) ![React](https://img.shields.io/badge/-React-61DAFB?style=flat&logo=react&logoColor=black) ![Kotlin](https://img.shields.io/badge/-Kotlin-7F52FF?style=flat&logo=kotlin&logoColor=white) ![Android](https://img.shields.io/badge/-Android-3DDC84?style=flat&logo=android&logoColor=white) ![SQLite](https://img.shields.io/badge/-SQLite-003B57?style=flat&logo=sqlite&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white) ![JWT](https://img.shields.io/badge/-JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)
 
 Sistema de gestión modular full-stack para la granja avícola **"El Campesino"**.
 Administra lotes de aves, alimentación, sanidad, producción diaria de huevos,
@@ -12,6 +12,7 @@ trazabilidad (hash encadenado tipo blockchain) y monitoreo IoT en tiempo real.
 - 🔐 Autenticación JWT con roles (admin/operario/veterinario)
 - 🏗️ Arquitectura en capas (API → Servicios → Repositorios → ORM)
 - 📊 Dashboards con gráficos interactivos y datos en tiempo real
+- 📱 App móvil Android nativa (Kotlin + Jetpack Compose)
 - ⛓️ Trazabilidad con hash SHA-256 encadenado (auditoría inmutable)
 - ✅ Testing con Pytest + linting (Ruff, ESLint)
 
@@ -25,8 +26,8 @@ documentos cortos y navegables:
 | Documento | Contenido |
 |---|---|
 | [Índice general](./docs/README.md) | Punto de entrada de la documentación |
-| [Guía de inicio](./docs/guia-de-inicio.md) | Requisitos, instalación, puesta en marcha y verificación de la conexión |
-| [Arquitectura](./docs/arquitectura.md) | Capas del backend, árbol de carpetas y patrones del frontend |
+| [Guía de inicio](./docs/guia-de-inicio.md) | Requisitos, instalación, puesta en marcha (web y móvil) y verificación de la conexión |
+| [Arquitectura](./docs/arquitectura.md) | Capas del backend, árbol de carpetas y patrones del frontend y la app móvil |
 | [API disponible](./docs/api.md) | Todos los endpoints por módulo + ejemplo con Postman |
 | [Reglas de negocio](./docs/reglas-de-negocio.md) | Reglas del dominio y rangos de sensores IoT |
 | [Módulos](./docs/modulos/README.md) | Documentación funcional por módulo |
@@ -46,6 +47,7 @@ documentos cortos y navegables:
 | **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | `TraceabilityPage` (`/trazabilidad`) | [trazabilidad.md](./docs/modulos/trazabilidad.md) | Implementado |
 | **Monitoreo IoT** | `app/api/v1/iot.py` | Ruta `/iot` | [iot.md](./docs/modulos/iot.md) | Backend listo; frontend pendiente |
 | **Frontend base** (layout, sidebar, dashboard) | — | `components/`, `pages/`, `contexts/`, `services/` | [arquitectura.md](./docs/arquitectura.md) | Implementado |
+| **App móvil** (Android) | `app/api/v1/auth.py` | `LoginScreen` + `RetrofitClient` | [arquitectura.md](./docs/arquitectura.md#app-movil-android) | Login implementado |
 | **Pruebas + documentación** | — | — | [guia-de-inicio.md](./docs/guia-de-inicio.md) | Parcial |
 
 ---
@@ -56,6 +58,7 @@ documentos cortos y navegables:
 |---|---|
 | Backend | Python 3.11+ · FastAPI · SQLAlchemy 2.0 · Pydantic v2 |
 | Frontend | React 19 · Vite · Bootstrap 5 (react-bootstrap) · React Router · Axios |
+| Móvil | Kotlin · Jetpack Compose · Retrofit + OkHttp (Gson) · Gradle |
 | Autenticación | JWT (python-jose) + bcrypt (passlib) |
 | Base de datos | SQLite (desarrollo) / PostgreSQL (producción) |
 | Testing | Pytest + TestClient (httpx) |
@@ -88,6 +91,11 @@ npm run dev
 
 Abrir <http://localhost:5173> (login en `/login`). El dev server de Vite
 configura un **proxy** (`/api` → `http://localhost:8000`).
+
+**App móvil** (Android, desde `movil/android/`):
+
+Abrir la carpeta `movil/android/` en Android Studio y ejecutar en un emulador o
+dispositivo. La app consume la API desplegada (`https://gvs.lat/api/v1/`).
 
 **Crear el primer admin:**
 

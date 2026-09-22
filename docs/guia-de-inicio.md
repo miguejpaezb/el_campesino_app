@@ -6,9 +6,10 @@ Contenido:
 2. [Puesta en marcha del backend](#puesta-en-marcha-del-backend)
 3. [Pruebas y calidad del backend](#pruebas-y-calidad-del-backend)
 4. [Puesta en marcha del frontend](#puesta-en-marcha-del-frontend)
-5. [Crear el admin inicial](#crear-el-admin-inicial)
-6. [Verificación de la conexión frontend ↔ backend](#verificacion-de-la-conexion-frontend--backend)
-7. [Documentación personalizada del backend](#documentacion-personalizada-del-backend)
+5. [Puesta en marcha de la app móvil](#puesta-en-marcha-de-la-app-movil)
+6. [Crear el admin inicial](#crear-el-admin-inicial)
+7. [Verificación de la conexión frontend ↔ backend](#verificacion-de-la-conexion-frontend--backend)
+8. [Documentación personalizada del backend](#documentacion-personalizada-del-backend)
 
 ---
 
@@ -16,6 +17,7 @@ Contenido:
 
 - Python 3.11+ (probado con 3.14)
 - Node.js 20+ y npm (probado con Node 24 / npm 11)
+- [Android Studio](https://developer.android.com/studio) (incluye el SDK y el JDK) para la app móvil
 - [Postman](https://www.postman.com/) u otro cliente HTTP (opcional, para pruebas manuales)
 
 ## Puesta en marcha del backend
@@ -74,6 +76,37 @@ npm run dev
 npm run lint
 ```
 
+## Puesta en marcha de la app móvil
+
+La app Android vive en `movil/android/` (Kotlin + Jetpack Compose) y consume la
+API desplegada en `https://gvs.lat/api/v1/`; no necesita que el backend local
+esté corriendo.
+
+### 1. Abrir el proyecto
+
+Abrir la carpeta `movil/android/` con **Android Studio**. Al sincronizar Gradle
+se descargan las dependencias (Retrofit, OkHttp, Compose).
+
+### 2. Ejecutar
+
+Seleccionar un emulador o un dispositivo físico y pulsar **Run**. La pantalla de
+inicio (`LoginScreen`) valida las credenciales contra `POST auth/login` y guarda
+el token JWT para las siguientes peticiones.
+
+### 3. Verificar (opcional, línea de comandos)
+
+El wrapper de Gradle viene incluido, por lo que también se puede compilar desde
+la terminal:
+
+```powershell
+.\gradlew.bat assembleDebug
+```
+
+> Para apuntar a un backend local, cambia `BASE_URL` en
+> `movil/android/app/src/main/java/com/miguelpaezdev/elcampesino/data/RetrofitClient.kt`
+> por la IP de tu equipo (por ejemplo `http://10.0.2.2:8000/api/v1/` desde el
+> emulador).
+
 ## Crear el admin inicial
 
 El registro público de usuarios fue eliminado: las cuentas solo las crea un
@@ -90,6 +123,9 @@ Con el backend y el frontend corriendo, la conexión entre ambos se valida con
 el login, el dashboard y los módulos de lotes, producción, alimentación y
 sanidad. Para un detalle del comportamiento de cada módulo consulta
 [modulos](./modulos/README.md).
+
+La app móvil valida la misma API a través del login (ver
+[Puesta en marcha de la app móvil](#puesta-en-marcha-de-la-app-movil)).
 
 1. **Crear el admin inicial** (ver [arriba](#crear-el-admin-inicial)).
 2. **Iniciar sesión** en <http://localhost:5173/login>: la `LoginPage` llama a

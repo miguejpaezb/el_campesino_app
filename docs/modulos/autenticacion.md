@@ -25,6 +25,15 @@ controlan los permisos (el registro de usuarios y su listado son exclusivos de
 - `ProtectedRoute` envuelve las rutas protegidas y muestra un spinner mientras
   se valida el token.
 
+## App móvil
+
+- `LoginScreen` (`movil/android/`) llama a `POST /api/v1/auth/login` y obtiene
+  el usuario con `GET /api/v1/auth/me` a través de `ApiService` (Retrofit).
+- `RetrofitClient` centraliza la `BASE_URL` y agrega el header
+  `Authorization: Bearer <token>` en las peticiones autenticadas.
+- La app móvil consume la API desplegada; el resto de módulos aún no están
+  implementados en Android.
+
 ## Endpoints que utiliza
 
 Ver [Autenticación](../api.md#autenticacion) en la referencia de la API.
