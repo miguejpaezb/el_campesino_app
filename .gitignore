@@ -3,8 +3,8 @@
 Thumbs.db
 ehthumbs.db
 Icon?
-!frontend/public/icons/
-!frontend/public/icons/*
+!web/frontend/public/icons/
+!web/frontend/public/icons/*
 
 # Archivos de editor / IDE
 .vs/
@@ -22,6 +22,8 @@ yarn.lock
 *.jar
 *.war
 *.ear
+# Excepción: el wrapper de Gradle es necesario para compilar la app móvil
+!movil/android/gradle/wrapper/gradle-wrapper.jar
 
 # Entornos virtuales y variables de entorno
 .env
@@ -69,5 +71,3 @@ coverage/
 *.7z
 *.gz
 
-# Elementos en espera
-android/

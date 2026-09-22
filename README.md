@@ -68,7 +68,7 @@ documentos cortos y navegables:
 Detalles y verificación de la conexión en la
 [guía de inicio](./docs/guia-de-inicio.md).
 
-**Backend** (desde `backend/`):
+**Backend** (desde `web/backend/`):
 
 ```powershell
 python -m venv .venv
@@ -78,7 +78,7 @@ Copy-Item .env.example .env
 .venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-**Frontend** (desde `frontend/`):
+**Frontend** (desde `web/frontend/`):
 
 ```powershell
 npm install
@@ -101,9 +101,12 @@ configura un **proxy** (`/api` → `http://localhost:8000`).
 
 ```
 EL_CAMPESINO/
-├── docs/           # Documentación completa (índice, guías, API, módulos)
-├── backend/        # API FastAPI (app/ + tests/)
-└── frontend/       # Aplicación React + Vite (src/)
+├── web/            # Aplicación web
+│   ├── backend/    # API FastAPI (app/ + tests/)
+│   └── frontend/   # Aplicación React + Vite (src/)
+├── movil/          # Aplicación móvil
+│   └── android/    # App Android (Kotlin + Jetpack Compose)
+└── docs/           # Documentación completa (índice, guías, API, módulos)
 ```
 
 Detalle del árbol de carpetas y decisiones de arquitectura en

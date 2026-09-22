@@ -22,7 +22,7 @@ Contenido:
 
 ### 1. Crear el entorno virtual e instalar dependencias
 
-Desde la carpeta `backend`:
+Desde la carpeta `web/backend`:
 
 ```powershell
 python -m venv .venv
@@ -58,7 +58,7 @@ Copy-Item .env.example .env
 
 ## Puesta en marcha del frontend
 
-Desde la carpeta `frontend`:
+Desde la carpeta `web/frontend`:
 
 ```powershell
 npm install
@@ -153,7 +153,7 @@ desde `/openapi.json` y se actualiza sola al agregar endpoints.
 - **Contenido por endpoint**: método HTTP con badge de color, ruta, summary,
   descripción, parámetros, request body (resolviendo `$ref`) y códigos de
   respuesta.
-- **Archivos**: `backend/app/static/docs/` (`index.html`, `styles.css`,
+- **Archivos**: `web/backend/app/static/docs/` (`index.html`, `styles.css`,
   `app.js`) y la ruta `GET /docs` en `app/main.py`.
 - Los estilos son **genéricos y básicos**; se ajustarán al estilo definitivo de
   la aplicación cuando se desarrolle el frontend.

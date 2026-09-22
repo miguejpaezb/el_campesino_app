@@ -6,6 +6,7 @@ Contenido:
 2. [Auditoría y trazabilidad](#auditoria-y-trazabilidad)
 3. [Frontend (React + Vite + Bootstrap)](#frontend-react--vite--bootstrap)
 4. [Patrones y decisiones del frontend](#patrones-y-decisiones-del-frontend)
+5. [App móvil (Android)](#app-movil-android)
 
 ---
 
@@ -15,7 +16,7 @@ El backend sigue una **arquitectura en capas**
 (API → Servicios → Repositorios → Modelos ORM → Base de datos):
 
 ```
-backend/
+web/backend/
 ├── app/
 │   ├── api/
 │   │   ├── deps.py               # Dependencias compartidas (get_db, get_current_user)
@@ -80,7 +81,7 @@ El frontend consume exclusivamente la API REST a través de Axios; nunca accede
 a la base de datos:
 
 ```
-frontend/
+web/frontend/
 ├── public/                      # Archivos estáticos (favicon, iconos SVG)
 ├── src/
 │   ├── components/              # Componentes reutilizables
@@ -128,6 +129,31 @@ documentan en [modulos](./modulos/README.md).
   `.toast`, `.modal-header`, `.btn-primary`), que ocultaban las notificaciones.
 - **Rutas**: `/login` es pública; el resto (`/`, `/lotes`, `/alimentacion`,
   `/sanidad`, `/produccion`, `/trazabilidad`, `/iot`) están protegidas.
+
+## App móvil (Android)
+
+Aplicación Android nativa (Kotlin + Jetpack Compose) que consume la misma API
+REST que el frontend web:
+
+```
+movil/android/
+├── app/
+│   └── src/main/
+│       ├── java/com/miguelpaezdev/elcampesino/
+│       │   ├── MainActivity.kt        # Punto de entrada (Compose)
+│       │   ├── data/                  # ApiService, RetrofitClient y DTOs
+│       │   └── ui/                    # screens/ (Login, Welcome) y theme/
+│       └── AndroidManifest.xml
+├── gradle/                            # Wrapper de Gradle
+├── build.gradle.kts
+└── settings.gradle.kts
+```
+
+- **Red**: `RetrofitClient` configura Retrofit + OkHttp (con logging en DEBUG)
+  y expone `ApiService`, que por ahora cubre `POST auth/login` y `GET auth/me`.
+- **Base URL**: apunta al backend desplegado (`https://gvs.lat/api/v1/`).
+- **Autenticación**: el token JWT se envía con el header
+  `Authorization: Bearer <token>`.
 
 ---
 
