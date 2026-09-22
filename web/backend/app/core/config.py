@@ -24,7 +24,8 @@ class Settings(BaseSettings):
         DATABASE_URL: Cadena de conexión de la base de datos.
         SECRET_KEY: Llave secreta para firmar tokens JWT.
         JWT_ALGORITHM: Algoritmo usado para firmar los tokens JWT.
-        JWT_EXPIRATION_MINUTES: Minutos de validez de un token JWT.
+        JWT_EXPIRATION_MINUTES: Minutos de validez de un token JWT (90 días
+            por defecto para mantener la sesión activa en los clientes).
         HOST: Host de escucha del servidor.
         PORT: Puerto de escucha del servidor.
         FRONTEND_URL: Origen permitido para CORS.
@@ -40,7 +41,7 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = "change-me-in-production"
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRATION_MINUTES: int = 60
+    JWT_EXPIRATION_MINUTES: int = 129600
 
     HOST: str = "0.0.0.0"
     PORT: int = 8000
