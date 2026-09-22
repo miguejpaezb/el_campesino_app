@@ -25,6 +25,10 @@ data class UserDto(
     val isActive: Boolean,
 )
 
+data class HealthDto(
+    val status: String,
+)
+
 data class ErrorResponse(
     val detail: String? = null,
 )

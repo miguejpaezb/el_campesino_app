@@ -1,5 +1,6 @@
 package com.miguelpaezdev.elcampesino.data
 
+import com.miguelpaezdev.elcampesino.data.dto.HealthDto
 import com.miguelpaezdev.elcampesino.data.dto.LoginRequest
 import com.miguelpaezdev.elcampesino.data.dto.LoginResponse
 import com.miguelpaezdev.elcampesino.data.dto.UserDto
@@ -10,6 +11,9 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface ApiService {
+
+    @GET("health")
+    suspend fun health(): Response<HealthDto>
 
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>

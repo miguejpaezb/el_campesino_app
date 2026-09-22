@@ -12,7 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    private const val BASE_URL = "https://gvs.lat/api/v1/"
+    private const val BASE_URL = "https://elcampesino.gvs.lat/api/v1/"
 
     private val gson = Gson()
 

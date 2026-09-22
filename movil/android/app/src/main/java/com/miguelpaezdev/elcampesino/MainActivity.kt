@@ -2,41 +2,95 @@ package com.miguelpaezdev.elcampesino
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.miguelpaezdev.elcampesino.data.RetrofitClient
 import com.miguelpaezdev.elcampesino.data.dto.UserDto
+import com.miguelpaezdev.elcampesino.data.session.SessionManager
+import com.miguelpaezdev.elcampesino.ui.navigation.AppShell
+import com.miguelpaezdev.elcampesino.ui.screens.LoadingScreen
 import com.miguelpaezdev.elcampesino.ui.screens.LoginScreen
-import com.miguelpaezdev.elcampesino.ui.screens.WelcomeScreen
 import com.miguelpaezdev.elcampesino.ui.theme.ElCampesinoTheme
+import kotlinx.coroutines.launch
+
+private sealed interface SessionState {
+    data object Loading : SessionState
+    data object LoggedOut : SessionState
+    data class LoggedIn(val user: UserDto) : SessionState
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT,
+            ),
+            navigationBarStyle = SystemBarStyle.light(
+                android.graphics.Color.argb(0xe6, 0xFF, 0xFF, 0xFF),
+                android.graphics.Color.argb(0x80, 0xFF, 0xFF, 0xFF),
+            ),
+        )
+        val session = (application as ElCampesinoApp).session
         setContent {
             ElCampesinoTheme {
-                var loggedUser by remember { mutableStateOf<UserDto?>(null) }
-
-                val user = loggedUser
-                if (user == null) {
-                    LoginScreen(
-                        onLoggedIn = { loggedUser = it },
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    WelcomeScreen(
-                        user = user,
-                        onLogout = { loggedUser = null },
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
+                AppRoot(session = session)
             }
         }
+    }
+}
+
+@Composable
+private fun AppRoot(session: SessionManager) {
+    var state by remember { mutableStateOf<SessionState>(SessionState.Loading) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        val token = session.getToken()
+        state = if (token == null) {
+            SessionState.LoggedOut
+        } else {
+            try {
+                val user = RetrofitClient.unwrap(
+                    RetrofitClient.api.getMe(RetrofitClient.bearer(token)),
+                )
+                SessionState.LoggedIn(user)
+            } catch (e: Exception) {
+                session.clear()
+                SessionState.LoggedOut
+            }
+        }
+    }
+
+    when (val current = state) {
+        SessionState.Loading -> LoadingScreen(modifier = Modifier.fillMaxSize())
+
+        SessionState.LoggedOut -> LoginScreen(
+            onLoggedIn = { token, user ->
+                scope.launch { session.save(token, user) }
+                state = SessionState.LoggedIn(user)
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        is SessionState.LoggedIn -> AppShell(
+            user = current.user,
+            onLogout = {
+                scope.launch { session.clear() }
+                state = SessionState.LoggedOut
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }
