@@ -3,9 +3,10 @@
 Documentación funcional de cada módulo del sistema: propósito, comportamiento
 del frontend, endpoints que utiliza y reglas de negocio aplicables.
 
-> La app móvil (Android) reutiliza los mismos endpoints; por ahora solo
-> implementa el módulo de **autenticación** (ver
-> [autenticacion.md](./autenticacion.md#app-movil)).
+> La app móvil (Android) reutiliza los mismos endpoints e implementa por ahora
+> los módulos de **autenticación** (ver
+> [autenticacion.md](./autenticacion.md#app-movil)) e **inventario de aves**
+> (ver [lotes.md](./lotes.md#app-movil)).
 
 | Módulo | Ruta (frontend) | Documento |
 |---|---|---|

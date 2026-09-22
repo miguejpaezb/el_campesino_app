@@ -143,6 +143,7 @@ movil/android/
 │       │   ├── MainActivity.kt        # Punto de entrada (Compose)
 │       │   ├── data/                  # ApiService, RetrofitClient, DTOs y session/
 │       │   └── ui/                    # navigation/, components/, screens/ y theme/
+│       │       └── screens/lots/      # LotsScreen, LotsViewModel y modales
 │       └── AndroidManifest.xml
 ├── gradle/                            # Wrapper de Gradle
 ├── build.gradle.kts

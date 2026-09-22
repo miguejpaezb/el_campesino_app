@@ -47,7 +47,7 @@ documentos cortos y navegables:
 | **Trazabilidad** (blockchain simulado) | `app/api/v1/traceability.py` | `TraceabilityPage` (`/trazabilidad`) | [trazabilidad.md](./docs/modulos/trazabilidad.md) | Implementado |
 | **Monitoreo IoT** | `app/api/v1/iot.py` | Ruta `/iot` | [iot.md](./docs/modulos/iot.md) | Backend listo; frontend pendiente |
 | **Frontend base** (layout, sidebar, dashboard) | — | `components/`, `pages/`, `contexts/`, `services/` | [arquitectura.md](./docs/arquitectura.md) | Implementado |
-| **App móvil** (Android) | `app/api/v1/auth.py` | `LoginScreen` + `RetrofitClient` | [arquitectura.md](./docs/arquitectura.md#app-movil-android) | Login implementado |
+| **App móvil** (Android) | `app/api/v1/auth.py` + `lots.py` | `LoginScreen`, `LotsScreen` | [arquitectura.md](./docs/arquitectura.md#app-movil-android) | Login y lotes implementados |
 | **Pruebas + documentación** | — | — | [guia-de-inicio.md](./docs/guia-de-inicio.md) | Parcial |
 
 ---

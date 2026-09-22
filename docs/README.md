@@ -35,8 +35,8 @@ que busques.
 
 ## Módulos
 
-> La app móvil (Android) por ahora solo cubre la **autenticación**; el resto de
-> módulos están implementados en la web.
+> La app móvil (Android) cubre por ahora **autenticación** e **inventario de
+> aves (lotes)**; el resto de módulos están implementados en la web.
 
 | Módulo | Ruta (frontend) | Documento |
 |---|---|---|
