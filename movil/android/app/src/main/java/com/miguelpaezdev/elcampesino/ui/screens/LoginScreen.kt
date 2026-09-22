@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -30,7 +29,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +46,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.miguelpaezdev.elcampesino.R
+import com.miguelpaezdev.elcampesino.data.ApiException
 import com.miguelpaezdev.elcampesino.data.RetrofitClient
 import com.miguelpaezdev.elcampesino.data.dto.LoginRequest
 import com.miguelpaezdev.elcampesino.data.dto.UserDto
@@ -59,15 +58,8 @@ import com.miguelpaezdev.elcampesino.ui.theme.DangerBorder
 import com.miguelpaezdev.elcampesino.ui.theme.DangerText
 import com.miguelpaezdev.elcampesino.ui.theme.InputBorder
 import com.miguelpaezdev.elcampesino.ui.theme.PlaceholderText
-import com.miguelpaezdev.elcampesino.ui.theme.StatusIdle
-import com.miguelpaezdev.elcampesino.ui.theme.StatusOffline
-import com.miguelpaezdev.elcampesino.ui.theme.StatusOnline
-import com.miguelpaezdev.elcampesino.ui.theme.StatusPillBackground
 import java.io.IOException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-private const val HEALTH_CHECK_INTERVAL_MS = 15000L
 
 @Composable
 fun LoginScreen(
@@ -78,20 +70,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    var systemOnline by remember { mutableStateOf<Boolean?>(null) }
 
     val scope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            systemOnline = try {
-                RetrofitClient.api.health().isSuccessful
-            } catch (e: Exception) {
-                false
-            }
-            delay(HEALTH_CHECK_INTERVAL_MS)
-        }
-    }
 
     Box(
         modifier = modifier
@@ -183,6 +163,7 @@ fun LoginScreen(
                                 onLoggedIn(login.accessToken, user)
                             } catch (e: Exception) {
                                 error = when (e) {
+                                    is ApiException -> e.message
                                     is IOException -> e.message
                                     else -> "No se pudo iniciar sesión"
                                 }
@@ -227,10 +208,6 @@ fun LoginScreen(
                         .clickable { },
                 )
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            SystemStatusPill(systemOnline = systemOnline)
         }
     }
 }
@@ -289,40 +266,4 @@ private fun ErrorAlert(message: String) {
             .border(1.dp, DangerBorder, RoundedCornerShape(6.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
     )
-}
-
-@Composable
-private fun SystemStatusPill(systemOnline: Boolean?) {
-    val dotColor = when (systemOnline) {
-        null -> StatusIdle
-        true -> StatusOnline
-        false -> StatusOffline
-    }
-    val label = when (systemOnline) {
-        null -> "Verificando..."
-        true -> "Óptimo"
-        false -> "Sin conexión"
-    }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(StatusPillBackground)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .background(dotColor),
-        )
-        Text(
-            text = "Estado del sistema: $label",
-            color = Color.Black,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
 }

@@ -163,6 +163,11 @@ movil/android/
 - **Expiración del token**: el backend emite JWT con **90 días** de validez
   (`JWT_EXPIRATION_MINUTES=129600`), de modo que la sesión se mantiene aunque el
   usuario cierre o actualice la app.
+- **Sin conexión**: si el dispositivo o el servidor no responden (`GET /health`
+  falla), se muestra la pantalla de error de conexión (`ConnectionErrorScreen`)
+  con botón **Reintentar** en lugar del login. Los fallos de red **no** borran la
+  sesión: al recuperar la conexión se revalida el token y se entra directo. Solo
+  un `401` del backend o el botón **Cerrar sesión** terminan la sesión.
 - **Navegación**: `AppShell` monta un `ModalNavigationDrawer` (menú lateral) con
   un botón flotante superior izquierdo y un `NavHost` (navigation-compose) con
   transiciones `slide + fade`. Las pantallas se definen en `ui/navigation/`

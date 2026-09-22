@@ -9,15 +9,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.miguelpaezdev.elcampesino.data.ApiException
 import com.miguelpaezdev.elcampesino.data.RetrofitClient
 import com.miguelpaezdev.elcampesino.data.dto.UserDto
 import com.miguelpaezdev.elcampesino.data.session.SessionManager
 import com.miguelpaezdev.elcampesino.ui.navigation.AppShell
+import com.miguelpaezdev.elcampesino.ui.screens.ConnectionErrorScreen
 import com.miguelpaezdev.elcampesino.ui.screens.LoadingScreen
 import com.miguelpaezdev.elcampesino.ui.screens.LoginScreen
 import com.miguelpaezdev.elcampesino.ui.theme.ElCampesinoTheme
@@ -26,6 +29,7 @@ import kotlinx.coroutines.launch
 private sealed interface SessionState {
     data object Loading : SessionState
     data object LoggedOut : SessionState
+    data object NoConnection : SessionState
     data class LoggedIn(val user: UserDto) : SessionState
 }
 
@@ -54,27 +58,52 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun AppRoot(session: SessionManager) {
     var state by remember { mutableStateOf<SessionState>(SessionState.Loading) }
+    var retryKey by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(retryKey) {
+        state = SessionState.Loading
+
+        val online = try {
+            RetrofitClient.api.health().isSuccessful
+        } catch (e: Exception) {
+            false
+        }
+        if (!online) {
+            state = SessionState.NoConnection
+            return@LaunchedEffect
+        }
+
         val token = session.getToken()
-        state = if (token == null) {
-            SessionState.LoggedOut
-        } else {
-            try {
-                val user = RetrofitClient.unwrap(
-                    RetrofitClient.api.getMe(RetrofitClient.bearer(token)),
-                )
-                SessionState.LoggedIn(user)
-            } catch (e: Exception) {
+        if (token == null) {
+            state = SessionState.LoggedOut
+            return@LaunchedEffect
+        }
+
+        state = try {
+            val user = RetrofitClient.unwrap(
+                RetrofitClient.api.getMe(RetrofitClient.bearer(token)),
+            )
+            SessionState.LoggedIn(user)
+        } catch (e: ApiException) {
+            if (e.statusCode == 401) {
                 session.clear()
                 SessionState.LoggedOut
+            } else {
+                SessionState.NoConnection
             }
+        } catch (e: Exception) {
+            SessionState.NoConnection
         }
     }
 
     when (val current = state) {
         SessionState.Loading -> LoadingScreen(modifier = Modifier.fillMaxSize())
+
+        SessionState.NoConnection -> ConnectionErrorScreen(
+            onRetry = { retryKey++ },
+            modifier = Modifier.fillMaxSize(),
+        )
 
         SessionState.LoggedOut -> LoginScreen(
             onLoggedIn = { token, user ->

@@ -15,11 +15,6 @@ val InputBorder = Color(0xFF777777)
 val PlaceholderText = Color(0xFF6C757D)
 val InfoText = Color(0xFFE9E9E9)
 
-val StatusPillBackground = Color(0xFFE9E9E9)
-val StatusIdle = Color(0xFF777777)
-val StatusOnline = Color(0xFF2E9E46)
-val StatusOffline = Color(0xFFDC3545)
-
 val DangerBackground = Color(0xFFF8D7DA)
 val DangerBorder = Color(0xFFF5C2C7)
 val DangerText = Color(0xFF842029)

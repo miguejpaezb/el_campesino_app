@@ -49,6 +49,6 @@ object RetrofitClient {
         val detail = runCatching {
             gson.fromJson(errorBody, ErrorResponse::class.java)?.detail
         }.getOrNull().orEmpty().ifEmpty { "Error HTTP ${response.code()}" }
-        throw IOException(detail)
+        throw ApiException(response.code(), detail)
     }
 }
