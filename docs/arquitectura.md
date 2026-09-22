@@ -141,8 +141,8 @@ movil/android/
 │   └── src/main/
 │       ├── java/com/miguelpaezdev/elcampesino/
 │       │   ├── MainActivity.kt        # Punto de entrada (Compose)
-│       │   ├── data/                  # ApiService, RetrofitClient y DTOs
-│       │   └── ui/                    # screens/ (Login, Welcome) y theme/
+│       │   ├── data/                  # ApiService, RetrofitClient, DTOs y session/
+│       │   └── ui/                    # navigation/, components/, screens/ y theme/
 │       └── AndroidManifest.xml
 ├── gradle/                            # Wrapper de Gradle
 ├── build.gradle.kts
@@ -151,9 +151,26 @@ movil/android/
 
 - **Red**: `RetrofitClient` configura Retrofit + OkHttp (con logging en DEBUG)
   y expone `ApiService`, que por ahora cubre `POST auth/login` y `GET auth/me`.
-- **Base URL**: apunta al backend desplegado (`https://gvs.lat/api/v1/`).
+- **Base URL**: apunta al backend desplegado (`https://elcampesino.gvs.lat/api/v1/`).
 - **Autenticación**: el token JWT se envía con el header
   `Authorization: Bearer <token>`.
+- **Sesión persistente**: el `access_token` (y el usuario) se guardan con
+  **DataStore Preferences** (`data/session/SessionManager.kt`). Al abrir la app,
+  `MainActivity` lee el token y lo revalida con `GET /auth/me`: si es válido,
+  restaura la sesión sin volver a pedir credenciales; si es rechazado, limpia el
+  almacenamiento y muestra el login. La sesión solo se cierra con el botón
+  **Cerrar sesión**.
+- **Expiración del token**: el backend emite JWT con **90 días** de validez
+  (`JWT_EXPIRATION_MINUTES=129600`), de modo que la sesión se mantiene aunque el
+  usuario cierre o actualice la app.
+- **Navegación**: `AppShell` monta un `ModalNavigationDrawer` (menú lateral) con
+  un botón flotante superior izquierdo y un `NavHost` (navigation-compose) con
+  transiciones `slide + fade`. Las pantallas se definen en `ui/navigation/`
+  (`Destinations`, `AppNavHost`, `AppShell`) y por ahora solo muestran el
+  encabezado (`PageHeader`: eyebrow + título) de cada sección.
+- **Menú de usuario**: la tarjeta flotante (`UserMenu`) muestra el email, el
+  avatar con la inicial, el saludo, los botones **Administrar cuenta** y
+  **Cerrar sesión**, y los enlaces de políticas/condiciones.
 
 ---
 

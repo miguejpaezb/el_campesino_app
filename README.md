@@ -95,7 +95,7 @@ configura un **proxy** (`/api` → `http://localhost:8000`).
 **App móvil** (Android, desde `movil/android/`):
 
 Abrir la carpeta `movil/android/` en Android Studio y ejecutar en un emulador o
-dispositivo. La app consume la API desplegada (`https://gvs.lat/api/v1/`).
+dispositivo. La app consume la API desplegada (`https://elcampesino.gvs.lat/api/v1/`).
 
 **Crear el primer admin:**
 

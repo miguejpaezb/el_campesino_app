@@ -79,7 +79,7 @@ npm run lint
 ## Puesta en marcha de la app móvil
 
 La app Android vive en `movil/android/` (Kotlin + Jetpack Compose) y consume la
-API desplegada en `https://gvs.lat/api/v1/`; no necesita que el backend local
+API desplegada en `https://elcampesino.gvs.lat/api/v1/`; no necesita que el backend local
 esté corriendo.
 
 ### 1. Abrir el proyecto
